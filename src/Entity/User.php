@@ -50,6 +50,11 @@ class User implements UserInterface
      */
     private $age;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=Client::class, inversedBy="users")
+     */
+    private $client;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -158,6 +163,18 @@ class User implements UserInterface
     public function setAge(int $age): self
     {
         $this->age = $age;
+
+        return $this;
+    }
+
+    public function getClient(): ?Client
+    {
+        return $this->client;
+    }
+
+    public function setClient(?Client $client): self
+    {
+        $this->client = $client;
 
         return $this;
     }

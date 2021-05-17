@@ -14,6 +14,8 @@
         "doctrine/orm": "^2.8",
         "fakerphp/faker": "^1.14",
         "lexik/jwt-authentication-bundle": "^2.11",
+        "friendsofsymfony/rest-bundle": "^3.0",
+        "jms/serializer-bundle": "^3.9",
         "phpdocumentor/reflection-docblock": "^5.2",
         "sensio/framework-extra-bundle": "^5.1",
         "symfony/asset": "5.2.*",
@@ -43,6 +45,7 @@
         "symfony/yaml": "5.2.*",
         "twig/extra-bundle": "^2.12|^3.0",
         "twig/twig": "^2.12|^3.0",
+        "willdurand/hateoas-bundle": "^2.2",
       "ext-json": "*"
     },
     "require-dev": {

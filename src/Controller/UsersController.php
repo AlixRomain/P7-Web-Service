@@ -2,9 +2,9 @@
 
 namespace App\Controller;
 
-use App\Entity\Client;
+use App\Entity\User;
 use App\Exception\ResourceValidationException;
-use App\Repository\ClientRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
@@ -13,67 +13,82 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\ConstraintViolationList;
 
-class ClientsController extends AbstractFOSRestController
+class UsersController extends AbstractFOSRestController
 {
     private $em;
-    private $repoClients;
+    private $repoUser;
 
-    public function __construct( EntityManagerInterface $em, ClientRepository  $repoClients){
-        $this->em = $em;
-        $this->repoClients = $repoClients;
+    public function __construct(EntityManagerInterface $em, UserRepository $repoUser)
+    {
+        $this->em          = $em;
+        $this->repoUser = $repoUser;
     }
+
     /**
-     * Show a clients list
+     * Show a customer list from one clients coporation
      * @Rest\Get(
-     *     path = "/api/clients",
-     *     name = "all_clients_show",
+     *     path = "/api/users",
+     *     name = "all_users_show",
      * )
      * @Rest\View(serializerGroups={"Default"})
-     * @IsGranted("ROLE_ADMIN")
+     * @IsGranted("ROLE_USER")
      */
-    public function getClientsList(Client $clients): Client
+    public function getUserList(User $users): User
     {
-        return $clients;
+        return $users;
     }
 
     /**
-     * Show one client details and this users
+     * Show one user details
      * @Rest\Get(
-     *     path = "/api/clients/{id}",
-     *     name = "client_show",
+     *     path = "/api/users/{id}",
+     *     name = "user_show",
      *     requirements={"id"="\d+"}
      * )
      * @Rest\View(serializerGroups={"Default"})
      * @IsGranted("ROLE_USER")
      */
-    public function getOneClients(Client $client): Client
+    public function getOneUser(User $user): User
     {
-        return $client;
+        return $user;
+    }
+/**
+     * Show all users from every customers corporation
+     * @Rest\Get(
+     *     path = "/api/admin/users",
+     *     name = "all_users_show"
+     * )
+     * @Rest\View(serializerGroups={"Default"})
+     * @IsGranted("ROLE_ADMIN")
+     */
+    public function getAllUsersOfBileMo(User $users): User
+    {
+        return $users;
     }
 
     /**
-     * Add one client corporation by admin
+     * Add one user by client or admin
      * @Rest\Post(
-     *     path = "/api/admin/client",
-     *     name = "add_client",
+     *     path = "/api/user",
+     *     name = "add_user",
      * )
      * @Rest\View(StatusCode = 201)
      * @ParamConverter(
-     *     "client",
+     *     "user",
      *      converter="fos_rest.request_body",
      *      options={
      *         "validator" = {"groups" = "Create"}
      *     }
      * )
      * @throws ResourceValidationException
-     * @IsGranted("ROLE_ADMIN")
+     * @IsGranted("ROLE_USER")
      */
-    public function postAddOneMobile(Client $client, ConstraintViolationList $violations): \FOS\RestBundle\View\View
+    public function postAddOneUser(User $user, ConstraintViolationList $violations): \FOS\RestBundle\View\View
     {
-        if(count($violations)) {
-            $message = 'The JSON sent contains invalid data : ' ;
+        if (count($violations)) {
+            $message = 'The JSON sent contains invalid data : ';
 
-            foreach ($violations as $violation){
+            foreach ($violations as $violation) {
                 $message .= sprintf(
                     "Field %s: %s",
                     $violation->getPropertyPath(),
@@ -83,39 +98,40 @@ class ClientsController extends AbstractFOSRestController
             throw new ResourceValidationException($message);
             //return $this->view($violations, Response::HTTP_BAD_REQUEST);
         }
-        $this->em->persist($client);
+        $this->em->persist($user);
         $this->em->flush();
         return $this->view(
-            $client,
+            $user,
             Response::HTTP_CREATED,
             [
-                'Location' => $this->generateUrl('tools_show', ['id' => $client->getId()])
+                'Location' => $this->generateUrl('tools_show', ['id' => $user->getId()])
             ]
         );
     }
+
     /**
-     * Update one client by admin
+     * Update one user by admin
      * @Rest\Put(
-     *     path = "/api/admin/client/{id}",
-     *     name = "update_client",
+     *     path = "/api/user/{id}",
+     *     name = "update_user",
      * )
      * @Rest\View(StatusCode = 201)
      * @ParamConverter(
-     *     "client",
+     *     "user",
      *      converter="fos_rest.request_body",
      *      options={
      *         "validator" = {"groups" = "Create"}
      *     }
      * )
      * @throws ResourceValidationException
-     * @IsGranted("ROLE_ADMIN")
+     * @IsGranted("ROLE_USER")
      */
-    public function putUpdateOneMobile(Client $client, ConstraintViolationList $violations): \FOS\RestBundle\View\View
+    public function putUpdateOneUser(User $user, ConstraintViolationList $violations): \FOS\RestBundle\View\View
     {
-        if(count($violations)) {
-            $message = 'The JSON sent contains invalid data : ' ;
+        if (count($violations)) {
+            $message = 'The JSON sent contains invalid data : ';
 
-            foreach ($violations as $violation){
+            foreach ($violations as $violation) {
                 $message .= sprintf(
                     "Field %s: %s",
                     $violation->getPropertyPath(),
@@ -125,30 +141,30 @@ class ClientsController extends AbstractFOSRestController
             throw new ResourceValidationException($message);
             //return $this->view($violations, Response::HTTP_BAD_REQUEST);
         }
-        $this->em->persist($client);
+        $this->em->persist($user);
         $this->em->flush();
         return $this->view(
-            $client,
+            $user,
             Response::HTTP_CREATED,
             [
-                'Location' => $this->generateUrl('tools_show', ['id' => $client->getId()])
+                'Location' => $this->generateUrl('tools_show', ['id' => $user->getId()])
             ]
         );
     }
 
     /**
-     * Delete one client by admin
+     * Delete one user by admin
      * @Rest\Delete(
-     *     path = "/api/admin/client/{id}",
-     *     name = "delete_client",
+     *     path = "/api/user/{id}",
+     *     name = "delete_user",
      *     requirements={"id"="\d+"}
      * )
      * @Rest\View(StatusCode = 204)
-     * @IsGranted("ROLE_ADMIN")
+     * @IsGranted("ROLE_USER")
      */
-    public function deleteClientsMethod(Client $client)
+    public function deleteUserMethod(User $user)
     {
-        $this->em->remove($client);
+        $this->em->remove($user);
         $this->em->flush();
     }
 }

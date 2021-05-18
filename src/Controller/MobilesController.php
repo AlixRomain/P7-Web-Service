@@ -31,10 +31,11 @@ class MobilesController extends AbstractFOSRestController
      * )
      * @Rest\View(serializerGroups={"Default"})
      * @IsGranted("ROLE_USER")
+     *
      */
-    public function getMobilesList(Mobiles $mobiles): Mobiles
+    public function getMobilesList(): array
     {
-        return $mobiles;
+        return $this->repoMobiles->findAll();
     }
 
     /**
@@ -90,7 +91,7 @@ class MobilesController extends AbstractFOSRestController
             $mobile,
             Response::HTTP_CREATED,
             [
-                'Location' => $this->generateUrl('tools_show', ['id' => $mobile->getId()])
+                'Location' => $this->generateUrl('mobile_show', ['id' => $mobile->getId()])
             ]
         );
     }
@@ -132,7 +133,7 @@ class MobilesController extends AbstractFOSRestController
             $mobile,
             Response::HTTP_CREATED,
             [
-                'Location' => $this->generateUrl('tools_show', ['id' => $mobile->getId()])
+                'Location' => $this->generateUrl('mobile_show', ['id' => $mobile->getId()])
             ]
         );
     }

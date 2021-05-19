@@ -23,6 +23,14 @@ class UsersController extends AbstractFOSRestController
         $this->em          = $em;
         $this->repoUser = $repoUser;
     }
+    /**
+     * @Rest\Post (
+     *     path = "/api/login_check",
+     *     name = "login_check",
+     *)
+     */
+    public function checkAction(){
+    }
 
     /**
      * Show a customer list from one clients coporation

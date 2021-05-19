@@ -7,15 +7,17 @@
         "php": ">=7.2.5",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "ext-json": "*",
         "composer/package-versions-deprecated": "1.11.99.1",
         "doctrine/annotations": "^1.0",
         "doctrine/doctrine-bundle": "^2.3",
         "doctrine/doctrine-migrations-bundle": "^3.1",
         "doctrine/orm": "^2.8",
         "fakerphp/faker": "^1.14",
-        "lexik/jwt-authentication-bundle": "^2.11",
         "friendsofsymfony/rest-bundle": "^3.0",
         "jms/serializer-bundle": "^3.9",
+        "lexik/jwt-authentication-bundle": "^2.11",
+        "nelmio/api-doc-bundle": "^4.2",
         "phpdocumentor/reflection-docblock": "^5.2",
         "sensio/framework-extra-bundle": "^5.1",
         "symfony/asset": "5.2.*",
@@ -46,7 +48,7 @@
         "twig/extra-bundle": "^2.12|^3.0",
         "twig/twig": "^2.12|^3.0",
         "willdurand/hateoas-bundle": "^2.2",
-      "ext-json": "*"
+        "zircote/swagger-php": "^3.1"
     },
     "require-dev": {
         "doctrine/doctrine-fixtures-bundle": "^3.4",

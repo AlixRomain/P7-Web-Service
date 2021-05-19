@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\MobilesRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Hateoas\Configuration\Annotation as Hateoas;
+use OpenApi\Annotations as OA;
 
 /**
  * @ORM\Entity(repositoryClass=MobilesRepository::class)
@@ -33,21 +34,27 @@ class Mobiles
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @OA\Property(type="integer")
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @OA\Property(type="string", nullable="false")
+     * @var string
      */
     private $name;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @var string
      */
     private $description;
 
     /**
      * @ORM\Column(type="decimal", precision=10, scale=0)
+     * @OA\Property(type="float", nullable="false")
+     * @var float
      */
     private $price;
 

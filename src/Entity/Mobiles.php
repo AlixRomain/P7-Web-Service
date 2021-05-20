@@ -5,7 +5,9 @@ namespace App\Entity;
 use App\Repository\MobilesRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Hateoas\Configuration\Annotation as Hateoas;
+use JMS\Serializer\Annotation as Serializer;
 use OpenApi\Annotations as OA;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=MobilesRepository::class)
@@ -41,12 +43,14 @@ class Mobiles
     /**
      * @ORM\Column(type="string", length=255)
      * @OA\Property(type="string", nullable="false")
+     * @Assert\NotBlank(groups="Create", groups="Update")
      * @var string
      */
     private $name;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\NotBlank(groups="Create", groups="Update")
      * @OA\Property(type="string", nullable="false")
      * @var string
      */
@@ -55,6 +59,7 @@ class Mobiles
     /**
      * @ORM\Column(type="decimal", precision=10, scale=0)
      * @OA\Property(type="float", nullable="false")
+     * @Assert\NotBlank(groups="Create", groups="Update")
      * @var float
      */
     private $price;

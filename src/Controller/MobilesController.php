@@ -8,6 +8,7 @@ use App\Repository\MobilesRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
+use FOS\RestBundle\View\View;
 use Nelmio\ApiDocBundle\Annotation\Security;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
@@ -64,7 +65,7 @@ class MobilesController extends AbstractFOSRestController
      *     name = "mobile_show",
      *     requirements={"id"="\d+"}
      * )
-     * @Rest\View(statusCode= 200 ,serializerGroups={"Default"})
+     * @Rest\View(statusCode= 200)
      * @IsGranted("ROLE_USER")
      * @OA\Get(
      *      path = "/api/mobiles/{id}",
@@ -104,11 +105,10 @@ class MobilesController extends AbstractFOSRestController
       * @Rest\View(StatusCode = 201)
       * @ParamConverter(
       *     "mobile",
-      *      converter="fos_rest.request_body",
-      *      options={
+      *     converter="fos_rest.request_body",
+      *     options={
       *         "validator" = {"groups" = "Create"}
-      *     }
-      * )
+      *     })
       * @throws ResourceValidationException
       * @IsGranted("ROLE_ADMIN")
       * @OA\Post(
@@ -158,7 +158,7 @@ class MobilesController extends AbstractFOSRestController
       * )
       * @OA\Tag(name="Mobiles")
      */
-    public function postAddOneMobile(Mobiles $mobile, ConstraintViolationList $violations): \FOS\RestBundle\View\View
+    public function postAddOneMobile(Mobiles $mobile, ConstraintViolationList $violations): View
     {
         if(count($violations)) {
             $message = 'The JSON sent contains invalid data : ' ;
@@ -203,7 +203,7 @@ class MobilesController extends AbstractFOSRestController
      * @param Mobiles                 $mobile
      * @param ConstraintViolationList $violations
      *
-     * @return \FOS\RestBundle\View\View
+     * @return View
      * @throws ResourceValidationException
      * @IsGranted("ROLE_ADMIN")
      * @OA\Put(
@@ -261,7 +261,7 @@ class MobilesController extends AbstractFOSRestController
      * )
      * @OA\Tag(name="Mobiles")
      */
-    public function putUpdateOneMobile(Mobiles $mobile, Mobiles $newMobile, ConstraintViolationList $violations): \FOS\RestBundle\View\View
+    public function putUpdateOneMobile(Mobiles $mobile, Mobiles $newMobile, ConstraintViolationList $violations): View
     {
         if(count($violations)) {
             $message = 'The JSON sent contains invalid data : ' ;

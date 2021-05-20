@@ -5,7 +5,6 @@ fos_rest:
     view_response_listener: 'force'
   serializer:
     serialize_null: true
-    groups: ["Default"]
   body_converter:
     enabled: true
     validate: true

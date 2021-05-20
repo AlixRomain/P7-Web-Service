@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Security\Core\User\UserInterface;
 use OpenApi\Annotations as OA;
 
@@ -22,17 +23,20 @@ class User implements UserInterface
      * @ORM\Column(type="integer")
      * @var int
      * @OA\Property(description="The unique identifier of the user.")
+     * @Serializer\Groups("FullClients")
      */
 
     private $id;
 
     /**
      * @ORM\Column(type="string", length=180, unique=true)
+     * @Serializer\Groups("FullClients")
      */
     private $email;
 
     /**
      * @ORM\Column(type="json")
+     * @Serializer\Groups("FullClients")
      */
     private $roles = [];
 
@@ -44,18 +48,21 @@ class User implements UserInterface
 
     /**
      * @ORM\Column(type="datetime")
+     * @Serializer\Groups("FullClients")
      */
     private $createdAt;
 
     /**
      * @ORM\Column(type="string", length=255)
      * @OA\Property(type="string", maxLength=255)
+     * @Serializer\Groups("FullClients")
      */
     private $username;
 
     /**
      * @ORM\Column(type="integer")
      * @OA\Property(type="integer", nullable="false")
+     * @Serializer\Groups("FullClients")
      */
     private $age;
 

@@ -8,6 +8,8 @@ use Doctrine\Common\Collections\Collection;
 use Hateoas\Configuration\Annotation as Hateoas;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Validator\Constraints as Assert;
+use OpenApi\Annotations as OA;
 
 /**
  * @ORM\Entity(repositoryClass=ClientRepository::class)
@@ -18,7 +20,7 @@ use JMS\Serializer\Annotation as Serializer;
  *       parameters = { "id" = "expr(object.getId())"},
  *       absolute= true,
  *     ),
- *     exclusion = @Hateoas\Exclusion(groups={"Default","MediumClients"})
+ *     exclusion = @Hateoas\Exclusion(groups={"MediumClients"})
  * )
  * Ici l'explusion permet de faire apparaître le link dans les groupes default et Mediumclients
  * @Hateoas\Relation(
@@ -37,19 +39,35 @@ class Client
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Serializer\Groups("MediumClients")
+     * @Serializer\Groups("MediumClients","FullClients")
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Serializer\Groups("MediumClients")
+     * @Serializer\Groups({"MediumClients","FullClients"})
+     * @OA\Property(type="string", nullable="false")
+     * @Assert\NotBlank(groups="Create")
+     * @Assert\Length(
+     *     min = 3,
+     *     max = 75,
+     *     minMessage="Veuillez insérer un nom d'au moin 3 lettres "
+     * )
+     * @var string
      */
     private $name;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Serializer\Groups("MediumClients")
+     * @Serializer\Groups("MediumClients","FullClients")
+     * @OA\Property(type="string", nullable="false")
+     * @Assert\NotBlank(groups="Create")
+     * @Assert\Length(
+     *     min = 3,
+     *     max = 105,
+     *     minMessage="Veuillez insérer une adrese valide"
+     * )
+     * @var string
      */
     private $adress;
 

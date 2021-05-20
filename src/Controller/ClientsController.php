@@ -12,7 +12,8 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\ConstraintViolationList;
-
+use OpenApi\Annotations as OA;
+use Nelmio\ApiDocBundle\Annotation\Model;
 class ClientsController extends AbstractFOSRestController
 {
     private $em;
@@ -28,12 +29,32 @@ class ClientsController extends AbstractFOSRestController
      *     path = "/api/clients",
      *     name = "all_clients_show",
      * )
-     * @Rest\View(serializerGroups={"Default"})
+     * @Rest\View(serializerGroups={"MediumClients"})
      * @IsGranted("ROLE_ADMIN")
+     * @OA\Tag(name="Clients")
+     * @OA\Get(
+     *      path = "/api/clients",
+     *     @OA\Response(
+     *       response="200",
+     *       description="Show a clients list",
+     *       @OA\JsonContent(
+     *          type="array",
+     *           @OA\Items(ref=@Model(type=Client::class))
+     *       )
+     *    )
+     * )
+     * @OA\Response(
+     *     response=401,
+     *     description="UNAUTHORIZED - JWT Token not found | Expired JWT Token | Invalid JWT Token"
+     * )
+     * @OA\Response(
+     *     response=403,
+     *     description="ACCESS DENIED"
+     * )
      */
-    public function getClientsList(Client $clients): Client
+    public function getClientsList(): array
     {
-        return $clients;
+        return $this->repoClients->findAll();
     }
 
     /**
@@ -45,6 +66,29 @@ class ClientsController extends AbstractFOSRestController
      * )
      * @Rest\View(serializerGroups={"Default"})
      * @IsGranted("ROLE_USER")
+     * @OA\Tag(name="Clients")
+     * @OA\Get(
+     *      path = "/api/clients/{id}",
+     *     @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="ID de la resource",
+     *          required=true
+     *     ),
+     *     @OA\Response(
+     *          response="200",
+     *          description="Show a client detail with users list",
+     *       @OA\JsonContent(type="array", @OA\Items(ref="#/components/schemas/Client"))
+     *      )
+     * )
+     * @OA\Response(
+     *     response=401,
+     *     description="UNAUTHORIZED - JWT Token not found | Expired JWT Token | Invalid JWT Token"
+     * )
+     * @OA\Response(
+     *     response=404,
+     *     description="NOT FOUND"
+     * )
      */
     public function getOneClients(Client $client): Client
     {
@@ -67,6 +111,7 @@ class ClientsController extends AbstractFOSRestController
      * )
      * @throws ResourceValidationException
      * @IsGranted("ROLE_ADMIN")
+     * @OA\Tag(name="Clients")
      */
     public function postAddOneMobile(Client $client, ConstraintViolationList $violations): \FOS\RestBundle\View\View
     {
@@ -109,6 +154,7 @@ class ClientsController extends AbstractFOSRestController
      * )
      * @throws ResourceValidationException
      * @IsGranted("ROLE_ADMIN")
+     * @OA\Tag(name="Clients")
      */
     public function putUpdateOneMobile(Client $client, ConstraintViolationList $violations): \FOS\RestBundle\View\View
     {
@@ -145,6 +191,7 @@ class ClientsController extends AbstractFOSRestController
      * )
      * @Rest\View(StatusCode = 204)
      * @IsGranted("ROLE_ADMIN")
+     * @OA\Tag(name="Clients")
      */
     public function deleteClientsMethod(Client $client)
     {

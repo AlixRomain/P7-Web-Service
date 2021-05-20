@@ -46,7 +46,11 @@ class MobilesController extends AbstractFOSRestController
      *       )
      *    )
      * )
-     * @Security(name="Bearer")
+     * @OA\Tag(name="Mobiles")
+     * @OA\Response(
+     *     response=401,
+     *     description="UNAUTHORIZED - JWT Token not found | Expired JWT Token | Invalid JWT Token"
+     * )
      */
     public function getMobilesList(): array
     {
@@ -60,7 +64,7 @@ class MobilesController extends AbstractFOSRestController
      *     name = "mobile_show",
      *     requirements={"id"="\d+"}
      * )
-     * @Rest\View(serializerGroups={"Default"})
+     * @Rest\View(statusCode= 200 ,serializerGroups={"Default"})
      * @IsGranted("ROLE_USER")
      * @OA\Get(
      *      path = "/api/mobiles/{id}",
@@ -72,10 +76,19 @@ class MobilesController extends AbstractFOSRestController
      *     ),
      *     @OA\Response(
      *          response="200",
-     *          description="Show a mobiles list",
+     *          description="Show a mobile detail",
      *       @OA\JsonContent(type="array", @OA\Items(ref="#/components/schemas/Mobiles"))
      *      )
      * )
+     * @OA\Response(
+     *     response=401,
+     *     description="UNAUTHORIZED - JWT Token not found | Expired JWT Token | Invalid JWT Token"
+     * )
+     * @OA\Response(
+     *     response=404,
+     *     description="NOT FOUND"
+     * )
+     * @OA\Tag(name="Mobiles")
      */
     public function getOneMobiles(Mobiles $mobile): Mobiles
     {
@@ -117,16 +130,33 @@ class MobilesController extends AbstractFOSRestController
       *                     property="price",
       *                     type="float"
       *                 ),
-      *
-      *                 example={"description": "Strong and design", "name": "Bile Mo II"}
+      *                 example={"name":"Frejus VI","description":"il est cool et pas chère!","price": 148}
       *             )
       *         )
       *     ),
       *     @OA\Response(
-      *         response=200,
-      *         description="Mobile add in database"
+      *        response=201,
+      *        description="CREATED",
+      *        @OA\JsonContent(type="array", @OA\Items(ref="#/components/schemas/Mobiles")),
+      *        @OA\Schema(
+      *          type="array",
+      *          @OA\Items(ref=@Model(type=Mobiles::class))
+      *        )
       *     )
       * )
+      * @OA\Response(
+      *     response=400,
+      *     description="BAD REQUEST"
+      * )
+      * @OA\Response(
+      *     response=401,
+      *     description="UNAUTHORIZED - JWT Token not found | Expired JWT Token | Invalid JWT Token"
+      * )
+      * @OA\Response(
+      *     response=403,
+      *     description="ACCESS DENIED"
+      * )
+      * @OA\Tag(name="Mobiles")
      */
     public function postAddOneMobile(Mobiles $mobile, ConstraintViolationList $violations): \FOS\RestBundle\View\View
     {
@@ -153,41 +183,85 @@ class MobilesController extends AbstractFOSRestController
             ]
         );
     }
-      /**
-       * Update one mobile by admin
-      * @Rest\Put(
-      *     path = "/api/admin/mobile/{id}",
-      *     name = "update_mobile",
-      * )
-      * @Rest\View(StatusCode = 201)
-      * @ParamConverter(
-      *     "mobile",
-      *      converter="fos_rest.request_body",
-      *      options={
-      *         "validator" = {"groups" = "Create"}
-      *     }
-      * )
-      * @throws ResourceValidationException
-      * @IsGranted("ROLE_ADMIN")
-       * @OA\Put(
-       *     path="/api/admin/mobile/{id}",
-       *     summary="Update one mobile by admin",
-       *     tags={"mobiles"},
-       *     @OA\Parameter(
-       *         description="integer",
-       *         in="path",
-       *         name="id",
-       *         required=true,
-       *         @OA\Schema(type="string"),
-       *         @OA\Examples(example="int", value="1", summary="An int value.")
-       *     ),
-       *     @OA\Response(
-       *         response=200,
-       *         description="OK"
-       *     )
-       * )
-       */
-    public function putUpdateOneMobile(Mobiles $mobile, ConstraintViolationList $violations): \FOS\RestBundle\View\View
+
+    /**
+     * Update one mobile by admin
+     * @Rest\Put(
+     *     path = "/api/admin/mobile/{id}",
+     *     name = "update_mobile",
+     *    requirements={"id"="\d+"}
+     * )
+     * @Rest\View(StatusCode = 201)
+     * @ParamConverter(
+     *     "newMobile",
+     *      converter="fos_rest.request_body",
+     *      options={
+     *         "validator" = {"groups" = "Create"}
+     *     }
+     * )
+     *
+     * @param Mobiles                 $mobile
+     * @param ConstraintViolationList $violations
+     *
+     * @return \FOS\RestBundle\View\View
+     * @throws ResourceValidationException
+     * @IsGranted("ROLE_ADMIN")
+     * @OA\Put(
+     *     path="/api/admin/mobile/{id}",
+     *     summary="Update one mobile by admin",
+     *      @OA\RequestBody(
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 @OA\Property(
+     *                     property="description",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="name",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="price",
+     *                     type="float"
+     *                 ),
+     *                 example={"name":"New name","description":"New Description","price": 0}
+     *             )
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         description="integer",
+     *         in="path",
+     *         name="id",
+     *         required=true,
+     *         @OA\Schema(type="string"),
+     *         @OA\Examples(example="int", value="1", summary="An int value.")
+     *     ),
+     *    @OA\Response(
+     *        response=201,
+     *        description="CREATED",
+     *        @OA\JsonContent(type="array", @OA\Items(ref="#/components/schemas/Mobiles")),
+     *        @OA\Schema(
+     *          type="array",
+     *          @OA\Items(ref=@Model(type=Mobiles::class))
+     *        )
+     *     )
+     * )
+     * @OA\Response(
+     *     response=400,
+     *     description="BAD REQUEST"
+     * )
+     * @OA\Response(
+     *     response=401,
+     *     description="UNAUTHORIZED - JWT Token not found | Expired JWT Token | Invalid JWT Token"
+     * )
+     * @OA\Response(
+     *     response=403,
+     *     description="ACCESS DENIED"
+     * )
+     * @OA\Tag(name="Mobiles")
+     */
+    public function putUpdateOneMobile(Mobiles $mobile, Mobiles $newMobile, ConstraintViolationList $violations): \FOS\RestBundle\View\View
     {
         if(count($violations)) {
             $message = 'The JSON sent contains invalid data : ' ;
@@ -202,6 +276,9 @@ class MobilesController extends AbstractFOSRestController
             throw new ResourceValidationException($message);
             //return $this->view($violations, Response::HTTP_BAD_REQUEST);
         }
+        $mobile->setDescription($newMobile->getDescription());
+        $mobile->setName($newMobile->getName());
+        $mobile->setPrice($newMobile->getPrice());
         $this->em->persist($mobile);
         $this->em->flush();
         return $this->view(
@@ -225,9 +302,8 @@ class MobilesController extends AbstractFOSRestController
      * @OA\Delete(
      *     path="/api/admin/mobile/{id}",
      *     summary="Delete one mobile by admin",
-     *     description="",
-     *     operationId="deletePet",
-     *     tags={"mobiles"},
+     *     description="DELETE",
+     *     operationId="delete Mobile",
      *     @OA\Parameter(
      *         description="Mobile id to delete",
      *         in="path",
@@ -245,17 +321,25 @@ class MobilesController extends AbstractFOSRestController
      *         @OA\Schema(
      *             type="string"
      *         )
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Invalid ID supplied"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Mobile not found"
-     *     ),
-     *     security={{"petstore_auth":{"write:pets", "read:pets"}}}
+     *     )
      * )
+     * @OA\Response(
+     *     response=204,
+     *     description="NO CONTENT"
+     * )
+     * @OA\Response(
+     *     response=401,
+     *     description="UNAUTHORIZED - JWT Token not found | Expired JWT Token | Invalid JWT Token"
+     * )
+     * @OA\Response(
+     *     response=403,
+     *     description="ACCESS DENIED"
+     * )
+     * @OA\Response(
+     *     response=404,
+     *     description="NOT FOUND"
+     * )
+     * @OA\Tag(name="Mobiles")
      */
     public function deleteMobilesMethod(Mobiles $mobile)
     {

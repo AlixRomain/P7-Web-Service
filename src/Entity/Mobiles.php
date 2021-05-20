@@ -47,6 +47,7 @@ class Mobiles
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @OA\Property(type="string", nullable="false")
      * @var string
      */
     private $description;

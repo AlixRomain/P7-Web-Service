@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
+use OpenApi\Annotations as OA;
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
@@ -19,7 +20,10 @@ class User implements UserInterface
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @var int
+     * @OA\Property(description="The unique identifier of the user.")
      */
+
     private $id;
 
     /**
@@ -45,11 +49,13 @@ class User implements UserInterface
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @OA\Property(type="string", maxLength=255)
      */
     private $username;
 
     /**
      * @ORM\Column(type="integer")
+     * @OA\Property(type="integer", nullable="false")
      */
     private $age;
 

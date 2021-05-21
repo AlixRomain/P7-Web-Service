@@ -39,13 +39,13 @@ class Client
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Serializer\Groups("MediumClients","FullClients")
+     * @Serializer\Groups("MediumClients","FullClients","clientUser")
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Serializer\Groups({"MediumClients","FullClients"})
+     * @Serializer\Groups({"MediumClients","FullClients","clientUser"})
      * @OA\Property(type="string", nullable="false")
      * @Assert\NotBlank(groups="Create")
      * @Assert\Length(
@@ -59,7 +59,7 @@ class Client
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Serializer\Groups("MediumClients","FullClients")
+     * @Serializer\Groups("MediumClients","FullClients","clientUser")
      * @OA\Property(type="string", nullable="false")
      * @Assert\NotBlank(groups="Create")
      * @Assert\Length(

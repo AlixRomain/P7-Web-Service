@@ -5,32 +5,52 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
 use OpenApi\Annotations as OA;
+use Hateoas\Configuration\Annotation as Hateoas;
+use Symfony\Component\Validator\Constraints as Assert;
+
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
+ * @UniqueEntity("email",message="Cette adresse email est déjà inséré en base")
  * @ORM\Table(name="`user`")
+ * @Hateoas\Relation(
+ *     "self",
+ *     href = @Hateoas\Route(
+ *      "all_users_show_admin",
+ *       parameters = { "id" = "expr(object.getId())"},
+ *       absolute= true,
+ *     ),
+ *     exclusion = @Hateoas\Exclusion(groups={"clientUser"})
+ * )
+ * Ici l'explusion permet de faire apparaître le link dans les groupes default et Mediumclients
  */
 class User implements UserInterface
 {
     const ROLE_ADMIN  = ["ROLE_ADMIN","ROLE_USER", "ROLE_CLIENT"];
-    const ROLE_CLIENT = ["ROLE_USER", "ROLE_CLIENT"];
-    const ROLE_USER   = ["ROLE_USER"];
+    const ROLE_USER = ["ROLE_USER", "ROLE_CLIENT"];
+    const ROLE_CLIENT  = ["ROLE_CLIENT"];
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      * @var int
      * @OA\Property(description="The unique identifier of the user.")
-     * @Serializer\Groups("FullClients")
+     * @Serializer\Groups("FullClients","MediumUser")
      */
 
     private $id;
 
     /**
      * @ORM\Column(type="string", length=180, unique=true)
-     * @Serializer\Groups("FullClients")
+     * @Serializer\Groups("FullClients","MediumUser")
+     * @Assert\Email(mode="strict",groups="create")
+     * @Assert\NotBlank
+     * @Assert\Length(
+     *     max = 255
+     * )
      */
     private $email;
 
@@ -38,36 +58,55 @@ class User implements UserInterface
      * @ORM\Column(type="json")
      * @Serializer\Groups("FullClients")
      */
-    private $roles = [];
+    private $roles = self::ROLE_CLIENT;
 
     /**
      * @var string The hashed password
      * @ORM\Column(type="string")
+     * @Assert\NotBlank(groups="Create")
+     * @Assert\Length(
+     *     min = 8,
+     *     max = 255
+     * )
+     * @Assert\Regex(
+     *     pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*\W)^",
+     *     match = true,
+     *     message = "Password must contain at least one lowercase, one uppercase, one digit and one special character !"
+     * )
      */
     private $password;
 
     /**
      * @ORM\Column(type="datetime")
-     * @Serializer\Groups("FullClients")
+     * @Serializer\Groups("FullClients","MediumUser")
      */
     private $createdAt;
 
     /**
      * @ORM\Column(type="string", length=255)
      * @OA\Property(type="string", maxLength=255)
-     * @Serializer\Groups("FullClients")
+     * @Serializer\Groups("FullClients","MediumUser")
+     * @Assert\NotBlank(groups="Create")
+     * @Assert\Length(
+     *     min = 3,
+     *     max = 75,
+     *     minMessage="Veuillez insérer un nom d'au moin 3 lettres "
+     * )
      */
     private $username;
 
     /**
      * @ORM\Column(type="integer")
      * @OA\Property(type="integer", nullable="false")
-     * @Serializer\Groups("FullClients")
+     * @Serializer\Groups("FullClients","MediumUser")
+     * @Assert\NotBlank(groups="Create")
+     * @Assert\Regex("^[0-9]+$")
      */
     private $age;
 
     /**
      * @ORM\ManyToOne(targetEntity=Client::class, inversedBy="users")
+     * @Serializer\Groups("clientUser")
      */
     private $client;
 

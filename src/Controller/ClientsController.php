@@ -10,6 +10,7 @@ use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\ConstraintViolationList;
@@ -68,6 +69,7 @@ class ClientsController extends AbstractFOSRestController
      * )
      * @Rest\View(serializerGroups={"FullClients"})
      * @IsGranted("ROLE_USER")
+     * @Security("client === user.getClient() || is_granted('ROLE_ADMIN')")
      * @OA\Tag(name="Clients")
      * @OA\Get(
      *      path = "/api/clients/{id}",
@@ -199,7 +201,8 @@ class ClientsController extends AbstractFOSRestController
      * @param Client                 $client
      * @param ConstraintViolationList $violations
      * @throws ResourceValidationException
-     * @IsGranted("ROLE_ADMIN")
+     * @IsGranted("ROLE_USER")
+     * @Security("client === user.getClient() || is_granted('ROLE_ADMIN')")
      * @OA\Tag(name="Clients")
      */
     public function putUpdateOneClient(Client $client, Client $newclient, ConstraintViolationList $violations): \FOS\RestBundle\View\View

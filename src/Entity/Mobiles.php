@@ -20,6 +20,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *       absolute= true
  *      )
  * )
+ * )
  * * @Hateoas\Relation(
  *     "self",
  *     href = @Hateoas\Route(
@@ -43,15 +44,15 @@ class Mobiles
     /**
      * @ORM\Column(type="string", length=255)
      * @OA\Property(type="string", nullable="false")
-     * @Assert\NotBlank(groups="Create", groups="Update")
+     * @Assert\NotBlank(groups="Create")
      * @var string
      */
     private $name;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Assert\NotBlank(groups="Create", groups="Update")
-     * @OA\Property(type="string", nullable="false")
+     * @Assert\NotBlank(groups="Create")
+     * @OA\Property(type="string")
      * @var string
      */
     private $description;
@@ -59,7 +60,12 @@ class Mobiles
     /**
      * @ORM\Column(type="decimal", precision=10, scale=0)
      * @OA\Property(type="float", nullable="false")
-     * @Assert\NotBlank(groups="Create", groups="Update")
+     * @Assert\NotBlank(groups="Create")
+     * @Assert\Type(
+     *     type="float",
+     *     message="The price must be a numeric value",
+     *     groups="Create"
+     *      )
      * @var float
      */
     private $price;

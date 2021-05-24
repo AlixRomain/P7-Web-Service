@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Client;
+use App\Exception\Errors;
 use App\Exception\ResourceValidationException;
 use App\Repository\ClientRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -11,6 +12,7 @@ use FOS\RestBundle\Controller\Annotations as Rest;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\ConstraintViolationList;
@@ -21,10 +23,12 @@ class ClientsController extends AbstractFOSRestController
 {
     private $em;
     private $repoClients;
+    private $errors;
 
-    public function __construct( EntityManagerInterface $em, ClientRepository  $repoClients){
+    public function __construct( EntityManagerInterface $em, ClientRepository  $repoClients, Errors $errors){
         $this->em = $em;
         $this->repoClients = $repoClients;
+        $this->errors = $errors;
     }
     /**
      * Show a clients list
@@ -76,7 +80,7 @@ class ClientsController extends AbstractFOSRestController
      *     @OA\Parameter(
      *          name="id",
      *          in="path",
-     *          description="ID de la resource",
+     *          description="ID client to read",
      *          required=true
      *     ),
      *     @OA\Response(
@@ -160,20 +164,7 @@ class ClientsController extends AbstractFOSRestController
      */
     public function postAddOneClient(Client $client, ConstraintViolationList $violations,Request $request): \FOS\RestBundle\View\View
     {
-
-        if(count($violations)) {
-            $message = 'The JSON sent contains invalid data : ' ;
-
-            foreach ($violations as $violation){
-                $message .= sprintf(
-                    "Field %s: %s",
-                    $violation->getPropertyPath(),
-                    $violation->getMessage()
-                );
-            }
-            throw new ResourceValidationException($message);
-            //return $this->view($violations, Response::HTTP_BAD_REQUEST);
-        }
+        $this->errors->violation($violations);
         $this->em->persist($client);
         $this->em->flush();
         return $this->view(
@@ -184,6 +175,7 @@ class ClientsController extends AbstractFOSRestController
             ]
         );
     }
+
     /**
      * Update one client by admin
      * @Rest\Put(
@@ -198,29 +190,69 @@ class ClientsController extends AbstractFOSRestController
      *         "validator" = {"groups" = "Create"}
      *     }
      * )
-     * @param Client                 $client
+     *
+     * @param Client                  $client
+     * @param Client                  $newclient
      * @param ConstraintViolationList $violations
+     *
+     * @return \FOS\RestBundle\View\View
      * @throws ResourceValidationException
      * @IsGranted("ROLE_USER")
      * @Security("client === user.getClient() || is_granted('ROLE_ADMIN')")
      * @OA\Tag(name="Clients")
+     * @OA\Put(
+     *     path="/api/admin/client/{id}",
+     *     summary="Update one client by admin",
+     *      @OA\RequestBody(
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 @OA\Property(
+     *                     property="name",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="description",
+     *                     type="string"
+     *                 ),
+     *                 example={"name":"New name","adress":"New Description"}
+     *             )
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         description="Id client to update",
+     *         in="path",
+     *         name="id",
+     *         required=true,
+     *         @OA\Schema(type="string"),
+     *         @OA\Examples(example="int", value="1", summary="An int value.")
+     *     ),
+     *    @OA\Response(
+     *        response=201,
+     *        description="CREATED",
+     *        @OA\JsonContent(type="array", @OA\Items(ref="#/components/schemas/Client")),
+     *        @OA\Schema(
+     *          type="array",
+     *          @OA\Items(ref=@Model(type=Client::class))
+     *        )
+     *     )
+     * )
+     * @OA\Response(
+     *     response=400,
+     *     description="BAD REQUEST"
+     * )
+     * @OA\Response(
+     *     response=401,
+     *     description="UNAUTHORIZED - JWT Token not found | Expired JWT Token | Invalid JWT Token"
+     * )
+     * @OA\Response(
+     *     response=403,
+     *     description="ACCESS DENIED"
+     * )
      */
     public function putUpdateOneClient(Client $client, Client $newclient, ConstraintViolationList $violations): \FOS\RestBundle\View\View
     {
-        if(count($violations)) {
-            $message = 'The JSON sent contains invalid data : ' ;
-
-            foreach ($violations as $violation){
-                $message .= sprintf(
-                    "Field %s: %s",
-                    $violation->getPropertyPath(),
-                    $violation->getMessage()
-                );
-            }
-            throw new ResourceValidationException($message);
-            //return $this->view($violations, Response::HTTP_BAD_REQUEST);
-        }
-
+        $this->errors->violation($violations);
         $client->setName($newclient->getName());
         $client->setAdress($newclient->getAdress());
 
@@ -242,6 +274,10 @@ class ClientsController extends AbstractFOSRestController
      *     name = "delete_client",
      *     requirements={"id"="\d+"}
      * )
+     *
+     * @param Client $client
+     *
+     * @return JsonResponse
      * @Rest\View(StatusCode = 204)
      * @IsGranted("ROLE_ADMIN")
      * @OA\Tag(name="Clients")
@@ -286,10 +322,11 @@ class ClientsController extends AbstractFOSRestController
      *     description="NOT FOUND"
      * )
      */
-    public function deleteClientsMethod(Client $client)
+    public function deleteClientsMethod(Client $client): JsonResponse
     {
         $this->em->remove($client);
         $this->em->flush();
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 }
 

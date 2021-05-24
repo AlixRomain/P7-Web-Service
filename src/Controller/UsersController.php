@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\Client;
 use App\Entity\User;
+use App\Exception\Errors;
 use App\Exception\ResourceValidationException;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -12,6 +14,7 @@ use FOS\RestBundle\View\View;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Validator\ConstraintViolationList;
@@ -22,11 +25,13 @@ class UsersController extends AbstractFOSRestController
 {
     private $em;
     private $repoUser;
+    private $errors;
 
-    public function __construct(EntityManagerInterface $em, UserRepository $repoUser)
+    public function __construct(EntityManagerInterface $em, UserRepository $repoUser,  Errors $errors)
     {
         $this->em          = $em;
         $this->repoUser = $repoUser;
+        $this->errors = $errors;
     }
     /**
      * @Rest\Post (
@@ -72,7 +77,7 @@ class UsersController extends AbstractFOSRestController
     public function checkAction(){
     }
 
-    /**
+    /*/**
      * Show a customer list from one clients coporation
      *
      * @Rest\Get(
@@ -83,10 +88,10 @@ class UsersController extends AbstractFOSRestController
      * @IsGranted("ROLE_USER")
      * @OA\Tag(name="User")
      */
-    public function getUserList(): array
+   /* public function getUserList(): array
     {
         return $this->repoUser->findBy(['client' => $this->getUser()->getClient()]);
-    }
+    }*/
 
     /**
      * Show one user details
@@ -108,7 +113,7 @@ class UsersController extends AbstractFOSRestController
      *     @OA\Parameter(
      *          name="id",
      *          in="path",
-     *          description="ID de la resource",
+     *          description="ID du user to show",
      *          required=true
      *     ),
      *     @OA\Response(
@@ -164,7 +169,7 @@ class UsersController extends AbstractFOSRestController
     }
 
     /**
-     * Add one user by client or admin
+     * Add one user by client
      * @Rest\Post(
      *     path = "/api/user",
      *     name = "add_user",
@@ -228,22 +233,109 @@ class UsersController extends AbstractFOSRestController
      *     description="ACCESS DENIED"
      * )
      */
-    public function postAddOneUser(User $user, ConstraintViolationList $violations, UserPasswordEncoderInterface $encoder): View
+    public function postAddOneUser(User $user, ConstraintViolationList $violations, UserPasswordEncoderInterface $encoder)
     {
-        if (count($violations)) {
-            $message = 'The JSON sent contains invalid data : ';
-
-            foreach ($violations as $violation) {
-                $message .= sprintf(
-                    "Field %s: %s",
-                    $violation->getPropertyPath(),
-                    $violation->getMessage()
-                );
-            }
-            throw new ResourceValidationException($message);
+        if(false !== array_search('ROLE_ADMIN',$this->getUser()->getRoles())){
+            $data= 'ADMIN must use the path /api/user/{id} to associate a new user with a customer' ;
+            return new JsonResponse($data, Response::HTTP_FORBIDDEN);
         }
+        $this->errors->violation($violations);
         $user->setPassword($encoder->encodePassword($user, $user->getPassword()));
         $user->setClient($this->getUser()->getClient());
+        $user->setCreatedAt(new \DateTime());
+        $this->em->persist($user);
+        $this->em->flush();
+        return $this->view(
+            $user,
+            Response::HTTP_CREATED,
+            [
+                'Location' => $this->generateUrl('user_show', ['id' => $user->getId()])
+            ]
+        );
+    }
+
+    /**
+     * Associate one user to customer by Admin
+     * @Rest\Post(
+     *     path = "/api/admin/user/{id}",
+     *     name = "add_user_by_admin",
+     * )
+     * @Rest\View(StatusCode = 201)
+     * @ParamConverter(
+     *     "user",
+     *      converter="fos_rest.request_body",
+     *      options={
+     *         "validator" = {"groups" = "Create"}
+     *     }
+     * )
+     *
+     * @param User                         $user
+     * @param ConstraintViolationList      $violations
+     * @param UserPasswordEncoderInterface $encoder
+     *
+     * @return View|JsonResponse
+     * @throws ResourceValidationException
+     * @IsGranted("ROLE_ADMIN")
+     * @OA\Tag(name="User")
+     * @OA\Post(
+     *     path="/api/admin/user/{id}",
+     *     summary="Associate one user to customer by Admin",
+     *     @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="ID to customer",
+     *          required=true
+     *     ),
+     *     @OA\RequestBody(
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 @OA\Property(
+     *                     property="username",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="email",
+     *                     type="string"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="age",
+     *                     type="integer"
+     *                 ),
+     *                 example={"username":"Martin Dupont","email":"martin@dupont.com","password":"OpenClass21!","age": 48}
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *        response=201,
+     *        description="CREATED",
+     *        @OA\JsonContent(
+     *           type="array",
+     *           @OA\Items(ref="#/components/schemas/User")),
+     *        @OA\Schema(
+     *          type="array",
+     *          @OA\Items(ref=@Model(type=User::class))
+     *        )
+     *     )
+     * )
+     * @OA\Response(
+     *     response=400,
+     *     description="BAD REQUEST"
+     * )
+     * @OA\Response(
+     *     response=401,
+     *     description="UNAUTHORIZED - JWT Token not found | Expired JWT Token | Invalid JWT Token"
+     * )
+     * @OA\Response(
+     *     response=403,
+     *     description="ACCESS DENIED"
+     * )
+     */
+    public function postAddOneUserByAdmin(User $user, Client $client, ConstraintViolationList $violations, UserPasswordEncoderInterface $encoder)
+    {
+        $this->errors->violation($violations);
+        $user->setPassword($encoder->encodePassword($user, $user->getPassword()));
+        $user->setClient($client);
         $user->setCreatedAt(new \DateTime());
         $this->em->persist($user);
         $this->em->flush();
@@ -308,7 +400,7 @@ class UsersController extends AbstractFOSRestController
      *         )
      *     ),
      *     @OA\Parameter(
-     *         description="integer",
+     *         description="Id user to update",
      *         in="path",
      *         name="id",
      *         required=true,
@@ -336,19 +428,7 @@ class UsersController extends AbstractFOSRestController
      */
     public function putUpdateOneUser(User $userr, User $newUser, ConstraintViolationList $violations): View
     {
-        if (count($violations)) {
-            $message = 'The JSON sent contains invalid data : ';
-
-            foreach ($violations as $violation) {
-                $message .= sprintf(
-                    "Field %s: %s",
-                    $violation->getPropertyPath(),
-                    $violation->getMessage()
-                );
-            }
-            throw new ResourceValidationException($message);
-            //return $this->view($violations, Response::HTTP_BAD_REQUEST);
-        }
+        $this->errors->violation($violations);
         $userr->setUsername($newUser->getUsername());
         $userr->setAge($newUser->getAge());
         $userr->setEmail($newUser->getEmail());
@@ -421,5 +501,6 @@ class UsersController extends AbstractFOSRestController
     {
         $this->em->remove($userr);
         $this->em->flush();
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 }

@@ -51,7 +51,8 @@ class Client
      * @Assert\Length(
      *     min = 3,
      *     max = 75,
-     *     minMessage="Veuillez insérer un nom d'au moin 3 lettres "
+     *     minMessage="Veuillez insérer un nom d'au moin 3 lettres ",
+     *     groups="Create"
      * )
      * @var string
      */
@@ -65,7 +66,8 @@ class Client
      * @Assert\Length(
      *     min = 3,
      *     max = 105,
-     *     minMessage="Veuillez insérer une adrese valide"
+     *     minMessage="Veuillez insérer une adrese valide",
+     *     groups="Create"
      * )
      * @var string
      */

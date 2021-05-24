@@ -12,9 +12,13 @@ use Hateoas\Configuration\Annotation as Hateoas;
 use Symfony\Component\Validator\Constraints as Assert;
 
 
+
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
- * @UniqueEntity("email",message="Cette adresse email est déjà inséré en base")
+ * @UniqueEntity("email",
+ *     message="Cette adresse email est déjà inséré en base",
+ *     groups="Create"
+ * )
  * @ORM\Table(name="`user`")
  * @Hateoas\Relation(
  *     "self",
@@ -46,8 +50,8 @@ class User implements UserInterface
     /**
      * @ORM\Column(type="string", length=180, unique=true)
      * @Serializer\Groups("FullClients","MediumUser")
-     * @Assert\Email(mode="strict",groups="create")
-     * @Assert\NotBlank
+     * @Assert\Email(groups="Create")
+     * @Assert\NotBlank(groups="Create")
      * @Assert\Length(
      *     max = 255
      * )
@@ -66,9 +70,11 @@ class User implements UserInterface
      * @Assert\NotBlank(groups="Create")
      * @Assert\Length(
      *     min = 8,
-     *     max = 255
+     *     max = 255,
+     *     groups="Create"
      * )
      * @Assert\Regex(
+     *     groups="Create",
      *     pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*\W)^",
      *     match = true,
      *     message = "Password must contain at least one lowercase, one uppercase, one digit and one special character !"
@@ -90,7 +96,8 @@ class User implements UserInterface
      * @Assert\Length(
      *     min = 3,
      *     max = 75,
-     *     minMessage="Veuillez insérer un nom d'au moin 3 lettres "
+     *     minMessage="Veuillez insérer un nom d'au moin 3 lettres ",
+     *     groups="Create"
      * )
      */
     private $username;
@@ -100,7 +107,10 @@ class User implements UserInterface
      * @OA\Property(type="integer", nullable="false")
      * @Serializer\Groups("FullClients","MediumUser")
      * @Assert\NotBlank(groups="Create")
-     * @Assert\Regex("^[0-9]+$")
+     * @Assert\Regex(
+     *     pattern="/^([0-9])+$/",
+     *     groups="Create"
+     *     )
      */
     private $age;
 

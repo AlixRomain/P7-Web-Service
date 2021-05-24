@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Mobiles;
+use App\Exception\Errors;
 use App\Exception\ResourceValidationException;
 use App\Repository\MobilesRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -12,6 +13,7 @@ use FOS\RestBundle\View\View;
 use Nelmio\ApiDocBundle\Annotation\Security;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\ConstraintViolationList;
 use OpenApi\Annotations as OA;
@@ -22,10 +24,12 @@ class MobilesController extends AbstractFOSRestController
 {
     private $em;
     private $repoMobiles;
+    private $errors;
 
-    public function __construct( EntityManagerInterface $em, MobilesRepository $repoMobiles){
+    public function __construct( EntityManagerInterface $em, MobilesRepository $repoMobiles, Errors $errors){
         $this->em = $em;
         $this->repoMobiles = $repoMobiles;
+        $this->errors = $errors;
     }
 
     /**
@@ -72,7 +76,7 @@ class MobilesController extends AbstractFOSRestController
      *     @OA\Parameter(
      *          name="id",
      *          in="path",
-     *          description="ID de la resource",
+     *          description="ID mobile to read",
      *          required=true
      *     ),
      *     @OA\Response(
@@ -160,19 +164,7 @@ class MobilesController extends AbstractFOSRestController
      */
     public function postAddOneMobile(Mobiles $mobile, ConstraintViolationList $violations): View
     {
-        if(count($violations)) {
-            $message = 'The JSON sent contains invalid data : ' ;
-
-            foreach ($violations as $violation){
-                $message .= sprintf(
-                    "Field %s: %s",
-                    $violation->getPropertyPath(),
-                    $violation->getMessage()
-                );
-            }
-            throw new ResourceValidationException($message);
-            //return $this->view($violations, Response::HTTP_BAD_REQUEST);
-        }
+        $this->errors->violation($violations);
         $this->em->persist($mobile);
         $this->em->flush();
         return $this->view(
@@ -201,6 +193,7 @@ class MobilesController extends AbstractFOSRestController
      * )
      *
      * @param Mobiles                 $mobile
+     * @param Mobiles                 $newMobile
      * @param ConstraintViolationList $violations
      *
      * @return View
@@ -230,7 +223,7 @@ class MobilesController extends AbstractFOSRestController
      *         )
      *     ),
      *     @OA\Parameter(
-     *         description="integer",
+     *         description="Id mobiles to update",
      *         in="path",
      *         name="id",
      *         required=true,
@@ -263,19 +256,7 @@ class MobilesController extends AbstractFOSRestController
      */
     public function putUpdateOneMobile(Mobiles $mobile, Mobiles $newMobile, ConstraintViolationList $violations): View
     {
-        if(count($violations)) {
-            $message = 'The JSON sent contains invalid data : ' ;
-
-            foreach ($violations as $violation){
-                $message .= sprintf(
-                    "Field %s: %s",
-                    $violation->getPropertyPath(),
-                    $violation->getMessage()
-                );
-            }
-            throw new ResourceValidationException($message);
-            //return $this->view($violations, Response::HTTP_BAD_REQUEST);
-        }
+        $this->errors->violation($violations);
         $mobile->setDescription($newMobile->getDescription());
         $mobile->setName($newMobile->getName());
         $mobile->setPrice($newMobile->getPrice());
@@ -345,6 +326,7 @@ class MobilesController extends AbstractFOSRestController
     {
         $this->em->remove($mobile);
         $this->em->flush();
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 }
 

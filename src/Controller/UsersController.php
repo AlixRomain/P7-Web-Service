@@ -174,7 +174,7 @@ class UsersController extends AbstractFOSRestController
      *     path = "/api/user",
      *     name = "add_user",
      * )
-     * @Rest\View(StatusCode = 201)
+     * @Rest\View(StatusCode = 201, serializerGroups={"MediumUser"})
      * @ParamConverter(
      *     "user",
      *      converter="fos_rest.request_body",
@@ -193,7 +193,7 @@ class UsersController extends AbstractFOSRestController
      *             mediaType="application/json",
      *             @OA\Schema(
      *                 @OA\Property(
-     *                     property="username",
+     *                     property="fullname",
      *                     type="string"
      *                 ),
      *                 @OA\Property(
@@ -204,7 +204,7 @@ class UsersController extends AbstractFOSRestController
      *                     property="age",
      *                     type="integer"
      *                 ),
-     *                 example={"username":"Martin Dupont","email":"martin@dupont.com","password":"OpenClass21!","age": 48}
+     *                 example={"fullname":"Martin Dupont","email":"martin@dupont.com","password":"OpenClass21!","age": 48}
      *             )
      *         )
      *     ),
@@ -247,10 +247,7 @@ class UsersController extends AbstractFOSRestController
         $this->em->flush();
         return $this->view(
             $user,
-            Response::HTTP_CREATED,
-            [
-                'Location' => $this->generateUrl('user_show', ['id' => $user->getId()])
-            ]
+            Response::HTTP_CREATED
         );
     }
 
@@ -260,7 +257,7 @@ class UsersController extends AbstractFOSRestController
      *     path = "/api/admin/user/{id}",
      *     name = "add_user_by_admin",
      * )
-     * @Rest\View(StatusCode = 201)
+     * @Rest\View(StatusCode = 201,serializerGroups={"MediumUser"})
      * @ParamConverter(
      *     "user",
      *      converter="fos_rest.request_body",
@@ -291,7 +288,7 @@ class UsersController extends AbstractFOSRestController
      *             mediaType="application/json",
      *             @OA\Schema(
      *                 @OA\Property(
-     *                     property="username",
+     *                     property="fullname",
      *                     type="string"
      *                 ),
      *                 @OA\Property(
@@ -302,7 +299,7 @@ class UsersController extends AbstractFOSRestController
      *                     property="age",
      *                     type="integer"
      *                 ),
-     *                 example={"username":"Martin Dupont","email":"martin@dupont.com","password":"OpenClass21!","age": 48}
+     *                 example={"fullname":"Martin Dupont","email":"martin@dupont.com","password":"OpenClass21!","age": 48}
      *             )
      *         )
      *     ),
@@ -341,10 +338,7 @@ class UsersController extends AbstractFOSRestController
         $this->em->flush();
         return $this->view(
             $user,
-            Response::HTTP_CREATED,
-            [
-                'Location' => $this->generateUrl('user_show', ['id' => $user->getId()])
-            ]
+            Response::HTTP_CREATED
         );
     }
 
@@ -354,7 +348,7 @@ class UsersController extends AbstractFOSRestController
      *     path = "/api/user/{id}",
      *     name = "update_user",
      * )
-     * @Rest\View(StatusCode = 201)
+     * @Rest\View(StatusCode = 201, serializerGroups={"MediumUser"})
      * @ParamConverter(
      *     "newUser",
      *      converter="fos_rest.request_body",
@@ -364,7 +358,6 @@ class UsersController extends AbstractFOSRestController
      * )
      *
      * @param User                    $userr
-     * @param User                    $newUser
      * @param ConstraintViolationList $violations
      *
      * @return View
@@ -380,7 +373,7 @@ class UsersController extends AbstractFOSRestController
      *             mediaType="application/json",
      *             @OA\Schema(
      *                 @OA\Property(
-     *                     property="username",
+     *                     property="fullname",
      *                     type="string"
      *                 ),
      *                 @OA\Property(
@@ -395,7 +388,7 @@ class UsersController extends AbstractFOSRestController
      *                     property="age",
      *                     type="integer"
      *                 ),
-     *                 example={"username":"Martin Dupont","email":"martin@dupont.com","password":"OpenClass21!","age": 48}
+     *                 example={"fullname":"Martin Dupont","email":"martin@dupont.com","password":"OpenClass21!","age": 48}
      *             )
      *         )
      *     ),
@@ -429,17 +422,14 @@ class UsersController extends AbstractFOSRestController
     public function putUpdateOneUser(User $userr, User $newUser, ConstraintViolationList $violations): View
     {
         $this->errors->violation($violations);
-        $userr->setUsername($newUser->getUsername());
+        $userr->setFullname($newUser->getFullname());
         $userr->setAge($newUser->getAge());
         $userr->setEmail($newUser->getEmail());
         $this->em->persist($userr);
         $this->em->flush();
         return $this->view(
             $userr,
-            Response::HTTP_CREATED,
-            [
-                'Location' => $this->generateUrl('user_show', ['id' => $userr->getId()])
-            ]
+            Response::HTTP_CREATED
         );
     }
 

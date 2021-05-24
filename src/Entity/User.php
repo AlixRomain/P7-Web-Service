@@ -91,14 +91,6 @@ class User implements UserInterface
     /**
      * @ORM\Column(type="string", length=255)
      * @OA\Property(type="string", maxLength=255)
-     * @Serializer\Groups("FullClients","MediumUser")
-     * @Assert\NotBlank(groups="Create")
-     * @Assert\Length(
-     *     min = 3,
-     *     max = 75,
-     *     minMessage="Veuillez insérer un nom d'au moin 3 lettres ",
-     *     groups="Create"
-     * )
      */
     private $username;
 
@@ -119,6 +111,19 @@ class User implements UserInterface
      * @Serializer\Groups("clientUser")
      */
     private $client;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @Serializer\Groups("FullClients","MediumUser")
+     * @Assert\NotBlank(groups="Create")
+     * @Assert\Length(
+     *     min = 3,
+     *     max = 75,
+     *     minMessage="Veuillez insérer un nom d'au moin 3 lettres ",
+     *     groups="Create"
+     * )
+     */
+    private $fullname;
 
     public function getId(): ?int
     {
@@ -240,6 +245,18 @@ class User implements UserInterface
     public function setClient(?Client $client): self
     {
         $this->client = $client;
+
+        return $this;
+    }
+
+    public function getFullname(): ?string
+    {
+        return $this->fullname;
+    }
+
+    public function setFullname(string $fullname): self
+    {
+        $this->fullname = $fullname;
 
         return $this;
     }

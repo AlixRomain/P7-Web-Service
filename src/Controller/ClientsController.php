@@ -115,7 +115,7 @@ class ClientsController extends AbstractFOSRestController
      *         "validator" = {"groups" = "Create"}
      *     }
      * )
-     * @Rest\View(StatusCode = 201)
+     * @Rest\View(StatusCode = 201, serializerGroups={"MediumClients"})
      * @ParamConverter("client",converter="fos_rest.request_body")
      * @throws ResourceValidationException
      * @IsGranted("ROLE_ADMIN")
@@ -169,10 +169,7 @@ class ClientsController extends AbstractFOSRestController
         $this->em->flush();
         return $this->view(
             $client,
-            Response::HTTP_CREATED,
-            [
-                'Location' => $this->generateUrl('client_show', ['id' => $client->getId()])
-            ]
+            Response::HTTP_CREATED
         );
     }
 
@@ -182,7 +179,7 @@ class ClientsController extends AbstractFOSRestController
      *     path = "/api/admin/client/{id}",
      *     name = "update_client",
      * )
-     * @Rest\View(StatusCode = 201)
+     * @Rest\View(StatusCode = 201, serializerGroups={"MediumClients"})
      * @ParamConverter(
      *     "newclient",
      *      converter="fos_rest.request_body",
@@ -260,10 +257,7 @@ class ClientsController extends AbstractFOSRestController
         $this->em->flush();
         return $this->view(
             $client,
-            Response::HTTP_CREATED,
-            [
-                'Location' => $this->generateUrl('client_show', ['id' => $client->getId()])
-            ]
+            Response::HTTP_CREATED
         );
     }
 

@@ -46,7 +46,7 @@ class AppFixtures extends Fixture
             $userAdmin->setFullname('Mr . '.$client["name"])
                 ->setUsername('Mr . '.$client["name"])
                 ->setEmail(strtolower($this->faker->word.'@'.$client["name"].'.com'))
-                ->setRoles(User::ROLE_CLIENT)
+                ->setRoles(User::ROLE_USER)
                 ->setPassword($this->encoder->encodePassword($userAdmin, "OpenClass21!"))
                 ->setAge($this->faker->numberBetween(18,90))
                 ->setCreatedAt($this->faker->dateTimeThisYear( 'now'))
@@ -61,7 +61,7 @@ class AppFixtures extends Fixture
                     ->setEmail($this->faker->email)
                     ->setAge($this->faker->numberBetween(18,90))
                     ->setCreatedAt($this->faker->dateTimeThisYear( 'now'))
-                    ->setRoles(User::ROLE_USER)
+                    ->setRoles(User::ROLE_CLIENT)
                     ->setPassword($this->encoder->encodePassword($user, "OpenClass21!"))
                     ->setClient($newClient);
                 $manager->persist($user);

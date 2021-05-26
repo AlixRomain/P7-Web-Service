@@ -98,10 +98,10 @@ class User implements UserInterface
      * @ORM\Column(type="integer")
      * @OA\Property(type="integer", nullable="false")
      * @Serializer\Groups("FullClients","MediumUser")
-     * @Assert\NotBlank(groups="Create")
+     * @Assert\NotBlank(groups={"Create", "Update"})
      * @Assert\Regex(
      *     pattern="/^([0-9])+$/",
-     *     groups="Create"
+     *     groups={"Create", "Update"}
      *     )
      */
     private $age;
@@ -115,12 +115,12 @@ class User implements UserInterface
     /**
      * @ORM\Column(type="string", length=255)
      * @Serializer\Groups("FullClients","MediumUser")
-     * @Assert\NotBlank(groups="Create")
+     * @Assert\NotBlank(groups={"Create", "Update"})
      * @Assert\Length(
      *     min = 3,
      *     max = 75,
      *     minMessage="Veuillez insérer un nom d'au moin 3 lettres ",
-     *     groups="Create"
+     *     groups={"Create", "Update"}
      * )
      */
     private $fullname;
@@ -133,6 +133,13 @@ class User implements UserInterface
     public function getEmail(): ?string
     {
         return $this->email;
+    }
+
+    public function setId(string $id): self
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function setEmail(string $email): self

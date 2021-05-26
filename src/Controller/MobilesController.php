@@ -2,18 +2,27 @@
 
 namespace App\Controller;
 
+use App\Entity\Mobile;
 use App\Entity\Mobiles;
 use App\Exception\Errors;
 use App\Exception\ResourceValidationException;
 use App\Repository\MobilesRepository;
+use App\Service\Pagination;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\View\View;
+use Hateoas\HateoasBuilder;
+use Hateoas\Representation\CollectionRepresentation;
+use Hateoas\Representation\PaginatedRepresentation;
+use JMS\Serializer\Serializer;
+use JMS\Serializer\SerializerInterface;
 use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Annotations\Parameter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\ConstraintViolationList;
 use OpenApi\Annotations as OA;
@@ -25,11 +34,13 @@ class MobilesController extends AbstractFOSRestController
     private $em;
     private $repoMobiles;
     private $errors;
+    private $hateoas;
 
     public function __construct( EntityManagerInterface $em, MobilesRepository $repoMobiles, Errors $errors){
         $this->em = $em;
         $this->repoMobiles = $repoMobiles;
         $this->errors = $errors;
+        $this->hateoas = HateoasBuilder::create()->build();
     }
 
     /**
@@ -38,8 +49,23 @@ class MobilesController extends AbstractFOSRestController
      *     path = "/api/mobiles",
      *     name = "all_mobiles_show",
      * )
-     * @Rest\View(serializerGroups={"Default"})
+     * @Rest\View()
      * @IsGranted("ROLE_USER")
+     * @OA\Parameter(
+     *   name="page",
+     *   description="The page number to show",
+     *   in="query"
+     * )
+     * @OA\Parameter(
+     *   name="limit",
+     *   description="The number of mobile per page",
+     *   in="query"
+     * )
+     * @OA\Parameter(
+     *   name="name",
+     *   description="The mobile name to search",
+     *   in="query"
+     * )
      * @OA\Get(
      *      path = "/api/mobiles",
      *     @OA\Response(
@@ -57,9 +83,26 @@ class MobilesController extends AbstractFOSRestController
      *     description="UNAUTHORIZED - JWT Token not found | Expired JWT Token | Invalid JWT Token"
      * )
      */
-    public function getMobilesList(): array
+    public function getMobilesList( Pagination $pagination, Request $request): View
     {
-        return $this->repoMobiles->findAll();
+        $limit = $request->query->get('limit', $this->getParameter('default_mobile_limit'));
+        $page = $request->query->get('page', 1);
+        $route = $request->attributes->get('_route');
+
+        $criteria = !empty($request->query->get('name')) ? ['name' => $request->query->get('name')] : [];
+
+        $pagination->setEntityClass(Mobiles::class)
+            ->setRoute($route);
+        $pagination->setCurrentPage($page)
+            ->setLimit($limit);
+        $pagination->setCriteria($criteria);
+
+        $paginated = $pagination->getData();
+
+        return $this->view(
+            $paginated,
+            Response::HTTP_OK
+        );
     }
 
     /**
@@ -188,7 +231,7 @@ class MobilesController extends AbstractFOSRestController
      *     "newMobile",
      *      converter="fos_rest.request_body",
      *      options={
-     *         "validator" = {"groups" = "Create"}
+     *         "validator" = {"groups" = "Update"}
      *     }
      * )
      *
@@ -254,13 +297,13 @@ class MobilesController extends AbstractFOSRestController
      * )
      * @OA\Tag(name="Mobiles")
      */
-    public function putUpdateOneMobile(Mobiles $mobile, Mobiles $newMobile, ConstraintViolationList $violations): View
+    public function putUpdateOneMobile(Mobiles $mobile, Mobiles $newMobile, ConstraintViolationList $violations, Request $request): View
     {
+        $data = json_decode($request->getContent(),true);
         $this->errors->violation($violations);
-        $mobile->setDescription($newMobile->getDescription());
-        $mobile->setName($newMobile->getName());
-        $mobile->setPrice($newMobile->getPrice());
-        $this->em->persist($mobile);
+        if(array_key_exists('description', $data)){$mobile->setDescription($newMobile->getDescription());}
+        if(array_key_exists('name', $data)){$mobile->setName($newMobile->getName());}
+        if(array_key_exists('price', $data)){$mobile->setPrice($newMobile->getPrice());}
         $this->em->flush();
         return $this->view(
             $mobile,

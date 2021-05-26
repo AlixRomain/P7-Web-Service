@@ -6,9 +6,13 @@ use App\Entity\Client;
 use App\Exception\Errors;
 use App\Exception\ResourceValidationException;
 use App\Repository\ClientRepository;
+use App\Service\Pagination;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
+use FOS\RestBundle\View\View;
+use JMS\Serializer\Serializer;
+use JMS\Serializer\SerializerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
@@ -38,6 +42,16 @@ class ClientsController extends AbstractFOSRestController
      * )
      * @Rest\View(serializerGroups={"MediumClients"})
      * @IsGranted("ROLE_ADMIN")
+     * @OA\Parameter(
+     *   name="page",
+     *   description="The page number to show",
+     *   in="query"
+     * )
+     * @OA\Parameter(
+     *   name="limit",
+     *   description="The number of mobile per page",
+     *   in="query"
+     * )
      * @OA\Tag(name="Clients")
      * @OA\Get(
      *      path = "/api/clients",
@@ -59,9 +73,24 @@ class ClientsController extends AbstractFOSRestController
      *     description="ACCESS DENIED"
      * )
      */
-    public function getClientsList(): array
+    public function getClientsList( Request $request, Pagination $pagination): View
     {
-        return $this->repoClients->findAll();
+        $limit = $request->query->get('limit', $this->getParameter('default_client_limit'));
+        $page = $request->query->get('page', 1);
+        $route = $request->attributes->get('_route');
+        $criteria = [];
+        $pagination->setEntityClass(Client::class)
+            ->setRoute($route);
+        $pagination->setCurrentPage($page)
+            ->setLimit($limit);
+        $pagination->setCriteria($criteria);
+
+        $paginated = $pagination->getData();
+
+        return $this->view(
+            $paginated,
+            Response::HTTP_OK
+        );
     }
 
     /**
@@ -162,7 +191,7 @@ class ClientsController extends AbstractFOSRestController
      * )
      * @OA\Tag(name="Clients")
      */
-    public function postAddOneClient(Client $client, ConstraintViolationList $violations,Request $request): \FOS\RestBundle\View\View
+    public function postAddOneClient(Client $client, ConstraintViolationList $violations,Request $request): View
     {
         $this->errors->violation($violations);
         $this->em->persist($client);
@@ -176,7 +205,7 @@ class ClientsController extends AbstractFOSRestController
     /**
      * Update one client by admin
      * @Rest\Put(
-     *     path = "/api/admin/client/{id}",
+     *     path = "/api/client/{id}",
      *     name = "update_client",
      * )
      * @Rest\View(StatusCode = 201, serializerGroups={"MediumClients"})
@@ -184,7 +213,7 @@ class ClientsController extends AbstractFOSRestController
      *     "newclient",
      *      converter="fos_rest.request_body",
      *     options={
-     *         "validator" = {"groups" = "Create"}
+     *         "validator" = {"groups" = "Update"}
      *     }
      * )
      *
@@ -192,13 +221,13 @@ class ClientsController extends AbstractFOSRestController
      * @param Client                  $newclient
      * @param ConstraintViolationList $violations
      *
-     * @return \FOS\RestBundle\View\View
+     * @return View
      * @throws ResourceValidationException
      * @IsGranted("ROLE_USER")
      * @Security("client === user.getClient() || is_granted('ROLE_ADMIN')")
      * @OA\Tag(name="Clients")
      * @OA\Put(
-     *     path="/api/admin/client/{id}",
+     *     path="/api/client/{id}",
      *     summary="Update one client by admin",
      *      @OA\RequestBody(
      *         @OA\MediaType(
@@ -247,11 +276,12 @@ class ClientsController extends AbstractFOSRestController
      *     description="ACCESS DENIED"
      * )
      */
-    public function putUpdateOneClient(Client $client, Client $newclient, ConstraintViolationList $violations): \FOS\RestBundle\View\View
+    public function putUpdateOneClient(Client $client, Client $newclient, ConstraintViolationList $violations,Request $request): View
     {
+        $data = json_decode($request->getContent(),true);
         $this->errors->violation($violations);
-        $client->setName($newclient->getName());
-        $client->setAdress($newclient->getAdress());
+        if(array_key_exists('name', $data)){$client->setName($newclient->getName());}
+        if(array_key_exists('adress', $data)){$client->setAdress($newclient->getAdress());}
 
         $this->em->persist($client);
         $this->em->flush();

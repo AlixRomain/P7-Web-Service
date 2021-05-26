@@ -15,6 +15,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Validator\ConstraintViolationList;
@@ -267,10 +268,11 @@ class UsersController extends AbstractFOSRestController
      * )
      *
      * @param User                         $user
+     * @param Client                       $client
      * @param ConstraintViolationList      $violations
      * @param UserPasswordEncoderInterface $encoder
      *
-     * @return View|JsonResponse
+     * @return View
      * @throws ResourceValidationException
      * @IsGranted("ROLE_ADMIN")
      * @OA\Tag(name="User")
@@ -332,6 +334,7 @@ class UsersController extends AbstractFOSRestController
     {
         $this->errors->violation($violations);
         $user->setPassword($encoder->encodePassword($user, $user->getPassword()));
+        $user->setUsername($user->getUsername());
         $user->setClient($client);
         $user->setCreatedAt(new \DateTime());
         $this->em->persist($user);
@@ -353,12 +356,14 @@ class UsersController extends AbstractFOSRestController
      *     "newUser",
      *      converter="fos_rest.request_body",
      *      options={
-     *         "validator" = {"groups" = "Create"}
+     *         "validator" = {"groups" = "Update"}
      *     }
      * )
      *
      * @param User                    $userr
+     * @param User                    $newUser
      * @param ConstraintViolationList $violations
+     * @param Request                 $request
      *
      * @return View
      * @throws ResourceValidationException
@@ -388,7 +393,7 @@ class UsersController extends AbstractFOSRestController
      *                     property="age",
      *                     type="integer"
      *                 ),
-     *                 example={"fullname":"Martin Dupont","email":"martin@dupont.com","password":"OpenClass21!","age": 48}
+     *                 example={"fullname":"Martin Dupont","age": 48}
      *             )
      *         )
      *     ),
@@ -419,13 +424,13 @@ class UsersController extends AbstractFOSRestController
      *     description="ACCESS DENIED"
      * )
      */
-    public function putUpdateOneUser(User $userr, User $newUser, ConstraintViolationList $violations): View
+    public function putUpdateOneUser(User $userr, User $newUser, ConstraintViolationList $violations, Request $request): View
     {
+
+        $data = json_decode($request->getContent(),true);
         $this->errors->violation($violations);
-        $userr->setFullname($newUser->getFullname());
-        $userr->setAge($newUser->getAge());
-        $userr->setEmail($newUser->getEmail());
-        $this->em->persist($userr);
+        if(array_key_exists('fullname', $data)){$userr->setFullname($newUser->getFullname());}
+        if(array_key_exists('age', $data)){$userr->setAge($newUser->getAge());}
         $this->em->flush();
         return $this->view(
             $userr,
@@ -440,7 +445,10 @@ class UsersController extends AbstractFOSRestController
      *     name = "delete_user",
      *     requirements={"id"="\d+"}
      * )
+     *
      * @param User $userr
+     *
+     * @return JsonResponse
      * @Rest\View(StatusCode = 204)
      * @Security("userr.getClient() === user.getClient() || is_granted('ROLE_ADMIN')")
      * @Security ("userr !== user")

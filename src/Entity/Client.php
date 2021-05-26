@@ -47,12 +47,12 @@ class Client
      * @ORM\Column(type="string", length=255)
      * @Serializer\Groups({"MediumClients","FullClients","clientUser"})
      * @OA\Property(type="string", nullable="false")
-     * @Assert\NotBlank(groups="Create")
+     * @Assert\NotBlank(groups={"Create", "Update"})
      * @Assert\Length(
      *     min = 3,
      *     max = 75,
      *     minMessage="Veuillez insérer un nom d'au moin 3 lettres ",
-     *     groups="Create"
+     *     groups={"Create", "Update"}
      * )
      * @var string
      */
@@ -62,12 +62,12 @@ class Client
      * @ORM\Column(type="string", length=255)
      * @Serializer\Groups("MediumClients","FullClients","clientUser")
      * @OA\Property(type="string", nullable="false")
-     * @Assert\NotBlank(groups="Create")
+     * @Assert\NotBlank(groups={"Create", "Update"})
      * @Assert\Length(
      *     min = 3,
      *     max = 105,
      *     minMessage="Veuillez insérer une adrese valide",
-     *     groups="Create"
+     *     groups={"Create", "Update"}
      * )
      * @var string
      */

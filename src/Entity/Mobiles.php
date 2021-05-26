@@ -44,14 +44,14 @@ class Mobiles
     /**
      * @ORM\Column(type="string", length=255)
      * @OA\Property(type="string", nullable="false")
-     * @Assert\NotBlank(groups="Create")
+     * @Assert\NotBlank(groups={"Create", "Update"})
      * @var string
      */
     private $name;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Assert\NotBlank(groups="Create")
+     * @Assert\NotBlank(groups={"Create", "Update"})
      * @OA\Property(type="string")
      * @var string
      */
@@ -60,7 +60,7 @@ class Mobiles
     /**
      * @ORM\Column(type="decimal", precision=10, scale=0)
      * @OA\Property(type="float", nullable="false")
-     * @Assert\NotBlank(groups="Create")
+     * @Assert\NotBlank(groups={"Create", "Update"})
      * @Assert\Type(
      *     type="float",
      *     message="The price must be a numeric value",

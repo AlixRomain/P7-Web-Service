@@ -5,7 +5,7 @@
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
     default_mobile_limit: 10
-    default_client_limit: 10
+    default_client_limit: 5
     default_user_limit: 10
 
 services:

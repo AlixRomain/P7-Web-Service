@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\View\View;
+use JMS\Serializer\SerializationContext;
 use JMS\Serializer\Serializer;
 use JMS\Serializer\SerializerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
@@ -73,8 +74,9 @@ class ClientsController extends AbstractFOSRestController
      *     description="ACCESS DENIED"
      * )
      */
-    public function getClientsList( Request $request, Pagination $pagination): View
+    public function getClientsList(SerializerInterface $serializer, Request $request, Pagination $pagination)
     {
+        //$this->repoClients->findAll()// a modifier
         $limit = $request->query->get('limit', $this->getParameter('default_client_limit'));
         $page = $request->query->get('page', 1);
         $route = $request->attributes->get('_route');
@@ -85,12 +87,14 @@ class ClientsController extends AbstractFOSRestController
             ->setLimit($limit);
         $pagination->setCriteria($criteria);
 
-        $paginated = $pagination->getData();
+        $dataRequest = $pagination->getDataClient($this->repoClients);
+        $data = $serializer->serialize($dataRequest, 'json', SerializationContext::create()->setGroups('MediumClients'));
 
-        return $this->view(
-            $paginated,
-            Response::HTTP_OK
+        $paginated = $pagination->getData($data);
+        $view= $this->view(
+            $paginated
         );
+        return $this->handleView($view);
     }
 
     /**
@@ -130,9 +134,12 @@ class ClientsController extends AbstractFOSRestController
      *     description="NOT FOUND"
      * )
      */
-    public function getOneClients(Client $client): Client
+    public function getOneClients(Client $client): View
     {
-        return $client;
+        return $this->view(
+            $client,
+            Response::HTTP_OK
+        );
     }
 
     /**

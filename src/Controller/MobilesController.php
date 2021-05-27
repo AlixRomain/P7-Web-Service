@@ -15,6 +15,7 @@ use FOS\RestBundle\View\View;
 use Hateoas\HateoasBuilder;
 use Hateoas\Representation\CollectionRepresentation;
 use Hateoas\Representation\PaginatedRepresentation;
+use JMS\Serializer\SerializationContext;
 use JMS\Serializer\Serializer;
 use JMS\Serializer\SerializerInterface;
 use Nelmio\ApiDocBundle\Annotation\Security;
@@ -83,7 +84,7 @@ class MobilesController extends AbstractFOSRestController
      *     description="UNAUTHORIZED - JWT Token not found | Expired JWT Token | Invalid JWT Token"
      * )
      */
-    public function getMobilesList( Pagination $pagination, Request $request): View
+    public function getMobilesList(Pagination $pagination, Request $request): View
     {
         $limit = $request->query->get('limit', $this->getParameter('default_mobile_limit'));
         $page = $request->query->get('page', 1);
@@ -97,8 +98,8 @@ class MobilesController extends AbstractFOSRestController
             ->setLimit($limit);
         $pagination->setCriteria($criteria);
 
-        $paginated = $pagination->getData();
-
+        $dataRequest = $pagination->getDataClient($this->repoMobiles);
+        $paginated = $pagination->getData($dataRequest);
         return $this->view(
             $paginated,
             Response::HTTP_OK

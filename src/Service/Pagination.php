@@ -106,20 +106,26 @@ class Pagination
         return $this;
     }
 
+    public function getDataClient($repoclient)
+    {
+        return $repoclient->findBy($this->criteria, $this->order, $this->limit, $this->getOffset());
+    }
+    public function getOffset()
+    {
+        return  $this->currentPage * $this->limit - $this->limit;
+    }
+
     /**
      * Get paginated data
      * @return PaginatedRepresentation
      */
-    public function getData(): PaginatedRepresentation
+    public function getData($data): PaginatedRepresentation
     {
-        // Offset
-        $offset = $this->currentPage * $this->limit - $this->limit;
 
         // Get elements
         $repo = $this->manager->getRepository($this->entityClass);
         $total = count($repo->findBy($this->criteria));
         $numberOfPages = ceil($total / $this->limit);
-        $data = $repo->findBy($this->criteria, $this->order, $this->limit, $offset);
 
         $collection = new CollectionRepresentation($data);
 

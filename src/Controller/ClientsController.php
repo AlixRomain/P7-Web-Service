@@ -5,15 +5,21 @@ namespace App\Controller;
 use App\Entity\Client;
 use App\Exception\Errors;
 use App\Exception\ResourceValidationException;
+use App\Repository\ArticleRepository;
 use App\Repository\ClientRepository;
+use App\Representation\Articles;
 use App\Service\Pagination;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
+use FOS\RestBundle\Request\ParamFetcherInterface;
 use FOS\RestBundle\View\View;
+use Hateoas\Configuration\Route;
+use Hateoas\Representation\Factory\PagerfantaFactory;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\Serializer;
 use JMS\Serializer\SerializerInterface;
+use Pagerfanta\Pagerfanta;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
@@ -41,7 +47,6 @@ class ClientsController extends AbstractFOSRestController
      *     path = "/api/clients",
      *     name = "all_clients_show",
      * )
-     * @Rest\View(serializerGroups={"MediumClients"})
      * @IsGranted("ROLE_ADMIN")
      * @OA\Parameter(
      *   name="page",
@@ -73,12 +78,36 @@ class ClientsController extends AbstractFOSRestController
      *     response=403,
      *     description="ACCESS DENIED"
      * )
+     * @Rest\QueryParam(
+     *     name="keyword",
+     *     requirements="[a-zA-Z0-9]",
+     *     nullable=true,
+     *     description="The keyword to search for."
+     * )
+     * @Rest\QueryParam(
+     *     name="order",
+     *     requirements="asc|desc",
+     *     default="asc",
+     *     description="Sort order (asc or desc)"
+     * )
+     * @Rest\QueryParam(
+     *     name="limit",
+     *     requirements="\d+",
+     *     default="15",
+     *     description="Max number of movies per page."
+     * )
+     * @Rest\QueryParam(
+     *     name="offset",
+     *     requirements="\d+",
+     *     default="0",
+     *     description="The pagination offset"
+     * )
      */
-    public function getClientsList(SerializerInterface $serializer, Request $request, Pagination $pagination)
+    public function getClientsList(SerializerInterface $serializer, Request $request, Pagination $pagination,ParamFetcherInterface $paramFetcher)
     {
-        //$this->repoClients->findAll()// a modifier
         $limit = $request->query->get('limit', $this->getParameter('default_client_limit'));
         $page = $request->query->get('page', 1);
+        /*
         $route = $request->attributes->get('_route');
         $criteria = [];
         $pagination->setEntityClass(Client::class)
@@ -89,12 +118,61 @@ class ClientsController extends AbstractFOSRestController
 
         $dataRequest = $pagination->getDataClient($this->repoClients);
         $data = $serializer->serialize($dataRequest, 'json', SerializationContext::create()->setGroups('MediumClients'));
+        $dataX= json_decode($data);
+        $paginated = $pagination->getData($dataX);*/
+        ($paramFetcher->get('offset') == 0)?$offset =2 : $offset =$this;
+        $pager = $this->getDoctrine()->getRepository(Client::class)->search(
+            $paramFetcher->get('keyword'),
+            $paramFetcher->get('order'),
+            $paramFetcher->get('limit'),
+            $offset
+        );
 
-        $paginated = $pagination->getData($data);
-        $view= $this->view(
-            $paginated
+        $pagerfantaFactory    = new  PagerfantaFactory ($page, $limit ); // vous pouvez passer la page,
+                                                // et le nom des paramètres limites
+    $paginatedCollection = $pagerfantaFactory->createRepresentation(
+        $pager,
+     new Route( 'all_clients_show' ));
+
+        $view = $this->view(
+            $paginatedCollection
         );
         return $this->handleView($view);
+
+               /* $pager = $this->getDoctrine()->getRepository(Client::class)->search(
+                    $paramFetcher->get('keyword'),
+                    $paramFetcher->get('order'),
+                    $paramFetcher->get('limit'),
+                    1
+                );
+
+                $pager->getCurrentPageResults();
+                $datas = new Articles($pager);
+
+                return  $this->view(
+                    $datas
+                );
+
+                return $this->handleView($view);*/
+
+     /*   $queryBuilder = $this->get('doctrine')->getRepository(Client::class)->createQueryBuilder('c')
+        ->andWhere( 'c.id > :toto')
+        ->setParameter('toto', 5);*/
+
+       /* $pagerfanta = new Pagerfanta(
+            new QueryAdapter($queryBuilder)
+        );*/
+       /* $adapter = new ArrayAdapter($dataRequest);
+        $pagerfanta = new Pagerfanta($adapter);
+
+        $pagerfanta->setMaxPerPage(2);
+        $pagerfanta->setCurrentPage(1);
+        $pagerfanta->getNextPage();
+
+        return $this->view(
+            $pagerfanta
+        );*/
+
     }
 
     /**

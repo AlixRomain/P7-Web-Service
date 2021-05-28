@@ -8,11 +8,14 @@ use Doctrine\Common\Collections\Collection;
 use Hateoas\Configuration\Annotation as Hateoas;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Expose;
 use Symfony\Component\Validator\Constraints as Assert;
 use OpenApi\Annotations as OA;
 
 /**
  * @ORM\Entity(repositoryClass=ClientRepository::class)
+ * @ORM\Entity(repositoryClass="App\Repository\ArticleRepository")
  * @Hateoas\Relation(
  *     "self",
  *     href = @Hateoas\Route(
@@ -31,8 +34,9 @@ use OpenApi\Annotations as OA;
  *       absolute= true
  *      )
  * )
- *
+ * @ExclusionPolicy("all")
  */
+
 class Client
 {
     /**
@@ -40,6 +44,7 @@ class Client
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      * @Serializer\Groups("MediumClients","FullClients","clientUser")
+     * @Serializer\Expose()
      */
     private $id;
 
@@ -55,6 +60,7 @@ class Client
      *     groups={"Create", "Update"}
      * )
      * @var string
+     * @Serializer\Expose()
      */
     private $name;
 
@@ -70,6 +76,7 @@ class Client
      *     groups={"Create", "Update"}
      * )
      * @var string
+     * @Serializer\Expose()
      */
     private $adress;
 

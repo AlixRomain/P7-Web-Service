@@ -127,10 +127,9 @@ class Pagination
         $total = count($repo->findBy($this->criteria));
         $numberOfPages = ceil($total / $this->limit);
 
-        $collection = new CollectionRepresentation($data);
 
         $paginated = new PaginatedRepresentation(
-            $collection,
+            new CollectionRepresentation($data),
             $this->route,
             array(),
             $this->currentPage,

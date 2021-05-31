@@ -19,16 +19,6 @@ use OpenApi\Annotations as OA;
  * @Hateoas\Relation(
  *     "self",
  *     href = @Hateoas\Route(
- *      "all_clients_show",
- *       parameters = { "id" = "expr(object.getId())"},
- *       absolute= true,
- *     ),
- *     exclusion = @Hateoas\Exclusion(groups={"MediumClients"})
- * )
- * Ici l'explusion permet de faire apparaître le link dans les groupes default et Mediumclients
- * @Hateoas\Relation(
- *     "self",
- *     href = @Hateoas\Route(
  *      "client_show",
  *       parameters = { "id" = "expr(object.getId())"},
  *       absolute= true

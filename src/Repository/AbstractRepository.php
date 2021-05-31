@@ -12,18 +12,11 @@ use Pagerfanta\Pagerfanta;
 
 abstract class AbstractRepository extends EntityRepository
 {
-    protected function paginate(QueryBuilder $qb, $limit = 20, $offset = 0): Pagerfanta
+    protected function paginate(QueryBuilder $qb, $limit, $page): Pagerfanta
     {
-        if (0 == $limit || 0 == $offset) {
-            throw new \LogicException('$limit & $offstet must be greater than 0.');
-        }
-
         $pager = new Pagerfanta(new QueryAdapter($qb));
-
-        $currentPage = ceil(($offset + 1) / $limit);
-        $pager->setCurrentPage($currentPage);
         $pager->setMaxPerPage((int) $limit);
-
+        $pager->setCurrentPage($page);
         return $pager;
     }
 }

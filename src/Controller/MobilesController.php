@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Client;
 use App\Entity\Mobile;
 use App\Entity\Mobiles;
 use App\Exception\Errors;
@@ -11,9 +12,12 @@ use App\Service\Pagination;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
+use FOS\RestBundle\Request\ParamFetcherInterface;
 use FOS\RestBundle\View\View;
+use Hateoas\Configuration\Route;
 use Hateoas\HateoasBuilder;
 use Hateoas\Representation\CollectionRepresentation;
+use Hateoas\Representation\Factory\PagerfantaFactory;
 use Hateoas\Representation\PaginatedRepresentation;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\Serializer;
@@ -83,27 +87,53 @@ class MobilesController extends AbstractFOSRestController
      *     response=401,
      *     description="UNAUTHORIZED - JWT Token not found | Expired JWT Token | Invalid JWT Token"
      * )
+     * @Rest\QueryParam(
+     *     name="keyword",
+     *     requirements="[a-zA-Z0-9]",
+     *     nullable=true,
+     *     description="The keyword to search for."
+     * )
+     * @Rest\QueryParam(
+     *     name="order",
+     *     requirements="asc|desc",
+     *     default="asc",
+     *     description="Sort order (asc or desc)"
+     * )
+     * @Rest\QueryParam(
+     *     key="limit",
+     *     name="limit",
+     *     requirements="\d+",
+     *     default="5",
+     *     description="Max number of movies per page."
+     * )
+     * @Rest\QueryParam(
+     *     name="page",
+     *     requirements="\d+",
+     *     key="page",
+     *     default="1",
+     *     description="The current page"
+     * )
      */
-    public function getMobilesList(Pagination $pagination, Request $request): View
+    public function getMobilesList(ParamFetcherInterface $paramFetcher)
     {
-        $limit = $request->query->get('limit', $this->getParameter('default_mobile_limit'));
-        $page = $request->query->get('page', 1);
-        $route = $request->attributes->get('_route');
+        $pager = $this->getDoctrine()->getRepository(Mobiles::class)->search(
+            $paramFetcher->get('keyword'),
+            $paramFetcher->get('order'),
+            $paramFetcher->get('limit'),
+            $paramFetcher->get('page')
+        );
 
-        $criteria = !empty($request->query->get('name')) ? ['name' => $request->query->get('name')] : [];
+        $pagerfantaFactory   = new  PagerfantaFactory ();
+        $paginatedCollection = $pagerfantaFactory->createRepresentation(
+            $pager,
+            new Route( 'all_mobiles_show', array())
+        );
 
-        $pagination->setEntityClass(Mobiles::class)
-            ->setRoute($route);
-        $pagination->setCurrentPage($page)
-            ->setLimit($limit);
-        $pagination->setCriteria($criteria);
-
-        $dataRequest = $pagination->getDataClient($this->repoMobiles);
-        $paginated = $pagination->getData($dataRequest);
-        return $this->view(
-            $paginated,
+        $view = $this->view(
+            $paginatedCollection,
             Response::HTTP_OK
         );
+        return $this->handleView($view);
     }
 
     /**

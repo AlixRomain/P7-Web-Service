@@ -4,13 +4,12 @@ namespace App\Repository;
 
 class ArticleRepository extends AbstractRepository
 {
-    public function search($term, $order = 'asc', $limit = 5, $offset = 0)
+    public function search($term, $order = 'asc', $limit, $page)
     {
         $qb = $this
             ->createQueryBuilder('c')
             ->select('c')
             ->orderBy('c.id', $order)
-
         ;
 
         if ($term) {
@@ -19,6 +18,6 @@ class ArticleRepository extends AbstractRepository
                 ->setParameter(1, '%'.$term.'%')
             ;
         }
-        return $this->paginate($qb, $limit, $offset);
+        return $this->paginate($qb, $limit, $page);
     }
 }

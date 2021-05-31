@@ -11,6 +11,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=MobilesRepository::class)
+ * @ORM\Entity(repositoryClass="App\Repository\ArticleRepository")
  *
  * @Hateoas\Relation(
  *     "self",

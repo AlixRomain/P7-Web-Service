@@ -15,6 +15,7 @@ use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Request\ParamFetcherInterface;
 use FOS\RestBundle\View\View;
 use Hateoas\Configuration\Route;
+use Hateoas\Representation\CollectionRepresentation;
 use Hateoas\Representation\Factory\PagerfantaFactory;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\Serializer;
@@ -29,6 +30,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\ConstraintViolationList;
 use OpenApi\Annotations as OA;
 use Nelmio\ApiDocBundle\Annotation\Model;
+use Hateoas\HateoasBuilder;
 
 class ClientsController extends AbstractFOSRestController
 {
@@ -91,87 +93,41 @@ class ClientsController extends AbstractFOSRestController
      *     description="Sort order (asc or desc)"
      * )
      * @Rest\QueryParam(
+     *     key="limit",
      *     name="limit",
      *     requirements="\d+",
-     *     default="15",
+     *     default="5",
      *     description="Max number of movies per page."
      * )
      * @Rest\QueryParam(
-     *     name="offset",
+     *     name="page",
      *     requirements="\d+",
-     *     default="0",
-     *     description="The pagination offset"
+     *     key="page",
+     *     default="1",
+     *     description="The current page"
      * )
+     *
      */
-    public function getClientsList(SerializerInterface $serializer, Request $request, Pagination $pagination,ParamFetcherInterface $paramFetcher)
+    public function getClientsList( Request $request,ParamFetcherInterface $paramFetcher)
     {
-        $limit = $request->query->get('limit', $this->getParameter('default_client_limit'));
-        $page = $request->query->get('page', 1);
-        /*
-        $route = $request->attributes->get('_route');
-        $criteria = [];
-        $pagination->setEntityClass(Client::class)
-            ->setRoute($route);
-        $pagination->setCurrentPage($page)
-            ->setLimit($limit);
-        $pagination->setCriteria($criteria);
-
-        $dataRequest = $pagination->getDataClient($this->repoClients);
-        $data = $serializer->serialize($dataRequest, 'json', SerializationContext::create()->setGroups('MediumClients'));
-        $dataX= json_decode($data);
-        $paginated = $pagination->getData($dataX);*/
-        ($paramFetcher->get('offset') == 0)?$offset =2 : $offset =$this;
         $pager = $this->getDoctrine()->getRepository(Client::class)->search(
             $paramFetcher->get('keyword'),
             $paramFetcher->get('order'),
             $paramFetcher->get('limit'),
-            $offset
+            $paramFetcher->get('page')
         );
 
-        $pagerfantaFactory    = new  PagerfantaFactory ($page, $limit ); // vous pouvez passer la page,
-                                                // et le nom des paramètres limites
-    $paginatedCollection = $pagerfantaFactory->createRepresentation(
-        $pager,
-     new Route( 'all_clients_show' ));
+        $pagerfantaFactory    = new  PagerfantaFactory ();
+        $paginatedCollection = $pagerfantaFactory->createRepresentation(
+            $pager,
+             new Route( 'all_clients_show', array())
+        );
 
         $view = $this->view(
-            $paginatedCollection
+            $paginatedCollection,
+            Response::HTTP_OK
         );
         return $this->handleView($view);
-
-               /* $pager = $this->getDoctrine()->getRepository(Client::class)->search(
-                    $paramFetcher->get('keyword'),
-                    $paramFetcher->get('order'),
-                    $paramFetcher->get('limit'),
-                    1
-                );
-
-                $pager->getCurrentPageResults();
-                $datas = new Articles($pager);
-
-                return  $this->view(
-                    $datas
-                );
-
-                return $this->handleView($view);*/
-
-     /*   $queryBuilder = $this->get('doctrine')->getRepository(Client::class)->createQueryBuilder('c')
-        ->andWhere( 'c.id > :toto')
-        ->setParameter('toto', 5);*/
-
-       /* $pagerfanta = new Pagerfanta(
-            new QueryAdapter($queryBuilder)
-        );*/
-       /* $adapter = new ArrayAdapter($dataRequest);
-        $pagerfanta = new Pagerfanta($adapter);
-
-        $pagerfanta->setMaxPerPage(2);
-        $pagerfanta->setCurrentPage(1);
-        $pagerfanta->getNextPage();
-
-        return $this->view(
-            $pagerfanta
-        );*/
 
     }
 

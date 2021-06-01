@@ -10,6 +10,7 @@ use App\Repository\ClientRepository;
 use App\Representation\Articles;
 use App\Service\Pagination;
 use Doctrine\ORM\EntityManagerInterface;
+use FOS\RestBundle\Context\Context;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Request\ParamFetcherInterface;
@@ -21,6 +22,7 @@ use JMS\Serializer\SerializationContext;
 use JMS\Serializer\Serializer;
 use JMS\Serializer\SerializerInterface;
 use Pagerfanta\Pagerfanta;
+use phpDocumentor\Reflection\Types\False_;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
@@ -49,6 +51,7 @@ class ClientsController extends AbstractFOSRestController
      *     path = "/api/clients",
      *     name = "all_clients_show",
      * )
+     * @Rest\View(serializerGroups={"MediumClients"})
      * @IsGranted("ROLE_ADMIN")
      * @OA\Parameter(
      *   name="page",
@@ -108,25 +111,17 @@ class ClientsController extends AbstractFOSRestController
      * )
      *
      */
-    public function getClientsList( Request $request,ParamFetcherInterface $paramFetcher)
+    public function getClientsList( Request $request,ParamFetcherInterface $paramFetcher, Pagination $pagination)
     {
-        $pager = $this->getDoctrine()->getRepository(Client::class)->search(
-            $paramFetcher->get('keyword'),
-            $paramFetcher->get('order'),
-            $paramFetcher->get('limit'),
-            $paramFetcher->get('page')
-        );
-
-        $pagerfantaFactory    = new  PagerfantaFactory ();
-        $paginatedCollection = $pagerfantaFactory->createRepresentation(
-            $pager,
-             new Route( 'all_clients_show', array())
-        );
+        $repo = $this->getDoctrine()->getRepository(Client::class);
+        $route = 'all_clients_show';
+        $paginatedCollection = $pagination->getViewPaginate($repo,$paramFetcher,$route);
 
         $view = $this->view(
             $paginatedCollection,
             Response::HTTP_OK
         );
+
         return $this->handleView($view);
 
     }
@@ -170,6 +165,7 @@ class ClientsController extends AbstractFOSRestController
      */
     public function getOneClients(Client $client): View
     {
+        $client->setExclude(false);
         return $this->view(
             $client,
             Response::HTTP_OK

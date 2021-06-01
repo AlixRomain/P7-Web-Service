@@ -114,20 +114,12 @@ class MobilesController extends AbstractFOSRestController
      *     description="The current page"
      * )
      */
-    public function getMobilesList(ParamFetcherInterface $paramFetcher)
+    public function getMobilesList(ParamFetcherInterface $paramFetcher, Pagination $pagination): Response
     {
-        $pager = $this->getDoctrine()->getRepository(Mobiles::class)->search(
-            $paramFetcher->get('keyword'),
-            $paramFetcher->get('order'),
-            $paramFetcher->get('limit'),
-            $paramFetcher->get('page')
-        );
 
-        $pagerfantaFactory   = new  PagerfantaFactory ();
-        $paginatedCollection = $pagerfantaFactory->createRepresentation(
-            $pager,
-            new Route( 'all_mobiles_show', array())
-        );
+        $repo = $this->getDoctrine()->getRepository(Mobiles::class);
+        $route = 'all_mobiles_show';
+        $paginatedCollection = $pagination->getViewPaginate($repo,$paramFetcher,$route);
 
         $view = $this->view(
             $paginatedCollection,

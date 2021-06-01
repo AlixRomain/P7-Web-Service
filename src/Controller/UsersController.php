@@ -7,10 +7,15 @@ use App\Entity\User;
 use App\Exception\Errors;
 use App\Exception\ResourceValidationException;
 use App\Repository\UserRepository;
+use App\Service\Pagination;
 use Doctrine\ORM\EntityManagerInterface;
+use FOS\RestBundle\Context\Context;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
+use FOS\RestBundle\Request\ParamFetcherInterface;
 use FOS\RestBundle\View\View;
+use Hateoas\Configuration\Route;
+use Hateoas\Representation\Factory\PagerfantaFactory;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
@@ -163,10 +168,44 @@ class UsersController extends AbstractFOSRestController
      *     response=401,
      *     description="UNAUTHORIZED - JWT Token not found | Expired JWT Token | Invalid JWT Token"
      * )
+     * @Rest\QueryParam(
+     *     name="keyword",
+     *     requirements="[a-zA-Z0-9]",
+     *     nullable=true,
+     *     description="The keyword to search for."
+     * )
+     * @Rest\QueryParam(
+     *     name="order",
+     *     requirements="asc|desc",
+     *     default="asc",
+     *     description="Sort order (asc or desc)"
+     * )
+     * @Rest\QueryParam(
+     *     key="limit",
+     *     name="limit",
+     *     requirements="\d+",
+     *     default="5",
+     *     description="Max number of movies per page."
+     * )
+     * @Rest\QueryParam(
+     *     name="page",
+     *     requirements="\d+",
+     *     key="page",
+     *     default="1",
+     *     description="The current page"
+     * )
      */
-    public function getAllUsersOfBileMo(): array
+    public function getAllUsersOfBileMo(ParamFetcherInterface $paramFetcher, Pagination $pagination)
     {
-        return $this->repoUser->findAll();
+        $repo = $this->getDoctrine()->getRepository(User::class);
+        $route = 'all_users_show_admin';
+        $paginatedCollection = $pagination->getViewPaginate($repo,$paramFetcher,$route);
+
+        $view = $this->view(
+            $paginatedCollection,
+            Response::HTTP_OK
+        );
+        return $this->handleView($view);
     }
 
     /**
@@ -237,7 +276,7 @@ class UsersController extends AbstractFOSRestController
     public function postAddOneUser(User $user, ConstraintViolationList $violations, UserPasswordEncoderInterface $encoder)
     {
         if(false !== array_search('ROLE_ADMIN',$this->getUser()->getRoles())){
-            $data= 'ADMIN must use the path /api/user/{id} to associate a new user with a customer' ;
+            $data= 'ADMIN must use the path /api/admin/user/{id} to associate a new user with a customer' ;
             return new JsonResponse($data, Response::HTTP_FORBIDDEN);
         }
         $this->errors->violation($violations);
@@ -333,6 +372,7 @@ class UsersController extends AbstractFOSRestController
     public function postAddOneUserByAdmin(User $user, Client $client, ConstraintViolationList $violations, UserPasswordEncoderInterface $encoder)
     {
         $this->errors->violation($violations);
+        $user->setExclude(true);
         $user->setPassword($encoder->encodePassword($user, $user->getPassword()));
         $user->setUsername($user->getUsername());
         $user->setClient($client);

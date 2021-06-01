@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use JMS\Serializer\Annotation\ExclusionPolicy;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
 use OpenApi\Annotations as OA;
@@ -15,6 +16,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
+ * @ORM\Entity(repositoryClass="App\Repository\ArticleRepository")
  * @UniqueEntity("email",
  *     message="Cette adresse email est déjà inséré en base",
  *     groups="Create"
@@ -79,6 +81,7 @@ class User implements UserInterface
      *     match = true,
      *     message = "Password must contain at least one lowercase, one uppercase, one digit and one special character !"
      * )
+     * @Serializer\Exclude(if="false")
      */
     private $password;
 
@@ -124,6 +127,29 @@ class User implements UserInterface
      * )
      */
     private $fullname;
+
+
+    /**
+     * @var bool
+     * @Serializer\Exclude()
+     */
+    private $exclude = true;
+
+    /**
+     * @return bool
+     */
+    public function getExclude(): bool
+    {
+        return $this->exclude;
+    }
+
+    /**
+     * @param mixed $exclude
+     */
+    public function setExclude($exclude): void
+    {
+        $this->exclude = $exclude;
+    }
 
     public function getId(): ?int
     {

@@ -24,7 +24,6 @@ use OpenApi\Annotations as OA;
  *       absolute= true
  *      )
  * )
- * @ExclusionPolicy("all")
  */
 
 class Client
@@ -34,7 +33,6 @@ class Client
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      * @Serializer\Groups("MediumClients","FullClients","clientUser")
-     * @Serializer\Expose()
      */
     private $id;
 
@@ -50,7 +48,6 @@ class Client
      *     groups={"Create", "Update"}
      * )
      * @var string
-     * @Serializer\Expose()
      */
     private $name;
 
@@ -66,15 +63,38 @@ class Client
      *     groups={"Create", "Update"}
      * )
      * @var string
-     * @Serializer\Expose()
      */
     private $adress;
 
     /**
      * @ORM\OneToMany(targetEntity=User::class, mappedBy="client")
      * @Serializer\Groups("FullClients")
+     * @Serializer\Exclude(if="object.getExclude()")
      */
     private $users;
+
+
+    /**
+     * @var bool
+     * @Serializer\Exclude()
+     */
+    public $exclude = true;
+
+    /**
+     * @return mixed
+     */
+    public function getExclude()
+    {
+        return $this->exclude;
+    }
+
+    /**
+     * @param mixed $exclude
+     */
+    public function setExclude($exclude): void
+    {
+        $this->exclude = $exclude;
+    }
 
     public function __construct()
     {

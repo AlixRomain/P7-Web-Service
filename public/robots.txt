@@ -1,0 +1,11 @@
+# Group 1
+User-agent: Googlebot
+Disallow: /vendor/
+Disallow: /Controller/
+Disallow: /config/
+
+# Group 2
+User-agent: *
+Allow: /View/
+
+Sitemap: http://snowtricks.tabaz/

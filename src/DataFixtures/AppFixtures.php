@@ -43,9 +43,10 @@ class AppFixtures extends Fixture
             $manager->persist($newClient);
             /*Build 1 user Admin users foreach client corporation*/
             $userAdmin = new User();
-            $userAdmin->setUsername('Mr . '.$client["name"])
+            $userAdmin->setFullname('Mr . '.$client["name"])
+                ->setUsername('Mr . '.$client["name"])
                 ->setEmail(strtolower($this->faker->word.'@'.$client["name"].'.com'))
-                ->setRoles(User::ROLE_CLIENT)
+                ->setRoles(User::ROLE_USER)
                 ->setPassword($this->encoder->encodePassword($userAdmin, "OpenClass21!"))
                 ->setAge($this->faker->numberBetween(18,90))
                 ->setCreatedAt($this->faker->dateTimeThisYear( 'now'))
@@ -55,18 +56,20 @@ class AppFixtures extends Fixture
             /*Build a 10 users simple for client corporation*/
             for($i = 0; $i < 10; $i++){
                 $user = new User();
-                $user->setUsername('Client chez '.$newClient->getName())
+                $user->setFullname('Client chez '.$newClient->getName())
+                    ->setUsername('Client chez '.$newClient->getName())
                     ->setEmail($this->faker->email)
                     ->setAge($this->faker->numberBetween(18,90))
                     ->setCreatedAt($this->faker->dateTimeThisYear( 'now'))
-                    ->setRoles(User::ROLE_USER)
+                    ->setRoles(User::ROLE_CLIENT)
                     ->setPassword($this->encoder->encodePassword($user, "OpenClass21!"))
                     ->setClient($newClient);
                 $manager->persist($user);
             }
         }
         $AdminBileMo = new User();
-        $AdminBileMo->setUsername("Bile Mo")
+        $AdminBileMo->setFullname("Bile Mo")
+            ->setUsername("BILEMo")
             ->setEmail("admin@admin.com")
             ->setRoles(User::ROLE_ADMIN)
             ->setPassword($this->encoder->encodePassword($AdminBileMo, "OpenClass21!"))

@@ -32,6 +32,16 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     exclusion = @Hateoas\Exclusion(groups={"clientUser"})
  * )
  * Ici l'explusion permet de faire apparaître le link dans les groupes default et Mediumclients
+ * @Hateoas\Relation(
+ *     "self",
+ *     href = @Hateoas\Route(
+ *      "user_show",
+ *       parameters = { "id" = "expr(object.getId())"},
+ *       absolute= true,
+ *     ),
+ *     exclusion = @Hateoas\Exclusion(groups={"MediumUser"})
+ * )
+ * @ExclusionPolicy("all")
  */
 class User implements UserInterface
 {
@@ -45,6 +55,7 @@ class User implements UserInterface
      * @var int
      * @OA\Property(description="The unique identifier of the user.")
      * @Serializer\Groups("FullClients","MediumUser")
+     * @Serializer\Expose()
      */
 
     private $id;
@@ -57,12 +68,14 @@ class User implements UserInterface
      * @Assert\Length(
      *     max = 255
      * )
+     * @Serializer\Expose()
      */
     private $email;
 
     /**
      * @ORM\Column(type="json")
      * @Serializer\Groups("FullClients")
+     * @Serializer\Expose()
      */
     private $roles = self::ROLE_CLIENT;
 
@@ -81,13 +94,14 @@ class User implements UserInterface
      *     match = true,
      *     message = "Password must contain at least one lowercase, one uppercase, one digit and one special character !"
      * )
-     * @Serializer\Exclude(if="false")
+     * @Serializer\Expose(if="!object")
      */
     private $password;
 
     /**
      * @ORM\Column(type="datetime")
      * @Serializer\Groups("FullClients","MediumUser")
+     * @Serializer\Expose()
      */
     private $createdAt;
 
@@ -106,16 +120,19 @@ class User implements UserInterface
      *     pattern="/^([0-9])+$/",
      *     groups={"Create", "Update"}
      *     )
+     * @Serializer\Expose()
      */
     private $age;
 
     /**
+     * @Serializer\Expose(if="object !== !object")
      * @ORM\ManyToOne(targetEntity=Client::class, inversedBy="users")
-     * @Serializer\Groups("clientUser")
+     * @Serializer\Groups("clientUser", "MediumUser")
      */
     private $client;
 
     /**
+     *
      * @ORM\Column(type="string", length=255)
      * @Serializer\Groups("FullClients","MediumUser")
      * @Assert\NotBlank(groups={"Create", "Update"})
@@ -125,6 +142,7 @@ class User implements UserInterface
      *     minMessage="Veuillez insérer un nom d'au moin 3 lettres ",
      *     groups={"Create", "Update"}
      * )
+     * @Serializer\Expose()
      */
     private $fullname;
 
@@ -133,7 +151,7 @@ class User implements UserInterface
      * @var bool
      * @Serializer\Exclude()
      */
-    private $exclude = true;
+    private $exclude = false;
 
     /**
      * @return bool
@@ -235,8 +253,7 @@ class User implements UserInterface
      */
     public function eraseCredentials()
     {
-        // If you store any temporary, sensitive data on the user, clear it here
-        // $this->plainPassword = null;
+
     }
 
     public function getCreatedAt(): ?\DateTimeInterface
@@ -294,3 +311,4 @@ class User implements UserInterface
         return $this;
     }
 }
+

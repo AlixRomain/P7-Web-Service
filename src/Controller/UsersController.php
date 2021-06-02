@@ -9,16 +9,16 @@ use App\Exception\ResourceValidationException;
 use App\Repository\UserRepository;
 use App\Service\Pagination;
 use Doctrine\ORM\EntityManagerInterface;
-use FOS\RestBundle\Context\Context;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Request\ParamFetcherInterface;
 use FOS\RestBundle\View\View;
-use Hateoas\Configuration\Route;
-use Hateoas\Representation\Factory\PagerfantaFactory;
+use JMS\Serializer\Expression\ExpressionEvaluator;
+use JMS\Serializer\SerializerBuilder;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,13 +30,11 @@ use Nelmio\ApiDocBundle\Annotation\Model;
 class UsersController extends AbstractFOSRestController
 {
     private $em;
-    private $repoUser;
     private $errors;
 
-    public function __construct(EntityManagerInterface $em, UserRepository $repoUser,  Errors $errors)
+    public function __construct(EntityManagerInterface $em,  Errors $errors)
     {
         $this->em          = $em;
-        $this->repoUser = $repoUser;
         $this->errors = $errors;
     }
     /**
@@ -83,21 +81,6 @@ class UsersController extends AbstractFOSRestController
     public function checkAction(){
     }
 
-    /*/**
-     * Show a customer list from one clients coporation
-     *
-     * @Rest\Get(
-     *     path = "/api/users",
-     *     name = "all_users_show"
-     * )
-     * @Rest\View(serializerGroups={})
-     * @IsGranted("ROLE_USER")
-     * @OA\Tag(name="User")
-     */
-   /* public function getUserList(): array
-    {
-        return $this->repoUser->findBy(['client' => $this->getUser()->getClient()]);
-    }*/
 
     /**
      * Show one user details
@@ -145,16 +128,16 @@ class UsersController extends AbstractFOSRestController
         return $userr;
     }
     /**
-     * Show all users from every customers corporation
+     * Show every users from one customer
      * @Rest\Get(
-     *     path = "/api/admin/users",
+     *     path = "/api/users",
      *     name = "all_users_show_admin"
      * )
      * @Rest\View(serializerGroups={"MediumUser", "clientUser"})
-     * @IsGranted("ROLE_ADMIN")
+     * @IsGranted("ROLE_USER")
      * @OA\Tag(name="User")
      * @OA\Get(
-     *      path = "/api/admin/users",
+     *      path = "/api/users",
      *     @OA\Response(
      *       response="200",
      *       description="Show a users list of BileMo Database",
@@ -195,11 +178,79 @@ class UsersController extends AbstractFOSRestController
      *     description="The current page"
      * )
      */
-    public function getAllUsersOfBileMo(ParamFetcherInterface $paramFetcher, Pagination $pagination)
+    public function getAllUsersByCustomer(ParamFetcherInterface $paramFetcher, Pagination $pagination): Response
     {
         $repo = $this->getDoctrine()->getRepository(User::class);
         $route = 'all_users_show_admin';
-        $paginatedCollection = $pagination->getViewPaginate($repo,$paramFetcher,$route);
+        $param = $this->getUser()->getClient();
+        $paginatedCollection = $pagination->getViewPaginate($repo,$paramFetcher,$route,$param);
+
+        $view = $this->view(
+            $paginatedCollection,
+            Response::HTTP_OK
+        );
+        return $this->handleView($view);
+    }
+
+    /**
+     * Show every users from one customer
+     * @Rest\Get(
+     *     path = "/api/Admin/users-customer/{id}",
+     *     name = "all_users_customer_show_admin"
+     * )
+     *
+     * @param Client $client
+     * @Rest\View(serializerGroups={"MediumUser", "clientUser"})
+     * @IsGranted("ROLE_ADMIN")
+     * @OA\Tag(name="User")
+     * @OA\Get(
+     *      path = "/api/Admin/users-customer/{id}",
+     *     @OA\Response(
+     *       response="200",
+     *       description="Show a users list of one customer",
+     *       @OA\JsonContent(
+     *          type="array",
+     *          @OA\Items(ref=@Model(type=User::class, groups={"MediumUser", "clientUser"}))
+     *       )
+     *    )
+     * )
+     * @OA\Response(
+     *     response=401,
+     *     description="UNAUTHORIZED - JWT Token not found | Expired JWT Token | Invalid JWT Token"
+     * )
+     * @Rest\QueryParam(
+     *     name="keyword",
+     *     requirements="[a-zA-Z0-9]",
+     *     nullable=true,
+     *     description="The keyword to search for."
+     * )
+     * @Rest\QueryParam(
+     *     name="order",
+     *     requirements="asc|desc",
+     *     default="asc",
+     *     description="Sort order (asc or desc)"
+     * )
+     * @Rest\QueryParam(
+     *     key="limit",
+     *     name="limit",
+     *     requirements="\d+",
+     *     default="5",
+     *     description="Max number of movies per page."
+     * )
+     * @Rest\QueryParam(
+     *     name="page",
+     *     requirements="\d+",
+     *     key="page",
+     *     default="1",
+     *     description="The current page"
+     * )
+     */
+    public function getAllUsersByCustomerByAdmin(Client $client, ParamFetcherInterface $paramFetcher, Pagination $pagination): Response
+    {
+        $repo = $this->getDoctrine()->getRepository(User::class);
+        $route = 'all_users_show_admin';
+        $param = $client;
+        $paginatedCollection = $pagination->getViewPaginate($repo,$paramFetcher,$route,$param);
 
         $view = $this->view(
             $paginatedCollection,
@@ -280,6 +331,7 @@ class UsersController extends AbstractFOSRestController
             return new JsonResponse($data, Response::HTTP_FORBIDDEN);
         }
         $this->errors->violation($violations);
+        $user->setUsername($user->getUsername());
         $user->setPassword($encoder->encodePassword($user, $user->getPassword()));
         $user->setClient($this->getUser()->getClient());
         $user->setCreatedAt(new \DateTime());
@@ -369,10 +421,9 @@ class UsersController extends AbstractFOSRestController
      *     description="ACCESS DENIED"
      * )
      */
-    public function postAddOneUserByAdmin(User $user, Client $client, ConstraintViolationList $violations, UserPasswordEncoderInterface $encoder)
+    public function postAddOneUserByAdmin(User $user, Client $client, ConstraintViolationList $violations, UserPasswordEncoderInterface $encoder): View
     {
         $this->errors->violation($violations);
-        $user->setExclude(true);
         $user->setPassword($encoder->encodePassword($user, $user->getPassword()));
         $user->setUsername($user->getUsername());
         $user->setClient($client);

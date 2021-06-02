@@ -22,8 +22,11 @@ use OpenApi\Annotations as OA;
  *      "client_show",
  *       parameters = { "id" = "expr(object.getId())"},
  *       absolute= true
- *      )
+ *      ),
+ *     exclusion = @Hateoas\Exclusion(groups={"FullClients"})
  * )
+ * Ici l'explusion permet de faire apparaître le link dans les groups default FullClients
+ * @ExclusionPolicy("all")
  */
 
 class Client
@@ -32,11 +35,13 @@ class Client
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Serializer\Groups("MediumClients","FullClients","clientUser")
+     * @Serializer\Groups("MediumClients","FullClients","clientUser","MediumUser")
+     * @Serializer\Expose()
      */
     private $id;
 
     /**
+     * @Serializer\Expose()
      * @ORM\Column(type="string", length=255)
      * @Serializer\Groups({"MediumClients","FullClients","clientUser"})
      * @OA\Property(type="string", nullable="false")
@@ -52,8 +57,9 @@ class Client
     private $name;
 
     /**
+     * @Expose()
      * @ORM\Column(type="string", length=255)
-     * @Serializer\Groups("MediumClients","FullClients","clientUser")
+     * @Serializer\Groups("MediumClients","FullClients","clientUser","MediumUser")
      * @OA\Property(type="string", nullable="false")
      * @Assert\NotBlank(groups={"Create", "Update"})
      * @Assert\Length(
@@ -67,9 +73,9 @@ class Client
     private $adress;
 
     /**
+     * @Serializer\Expose(if="object === null")
      * @ORM\OneToMany(targetEntity=User::class, mappedBy="client")
      * @Serializer\Groups("FullClients")
-     * @Serializer\Exclude(if="object.getExclude()")
      */
     private $users;
 

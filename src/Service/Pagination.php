@@ -15,13 +15,14 @@ use Symfony\Component\HttpFoundation\Response;
 class Pagination
 {
 
-    public function getViewPaginate( $repo,$paramFetcher,$route)
+    public function getViewPaginate( $repo,$paramFetcher,$route,$param = null)
     {
         $pager = $repo->search(
             $paramFetcher->get('keyword'),
             $paramFetcher->get('order'),
             $paramFetcher->get('limit'),
-            $paramFetcher->get('page')
+            $paramFetcher->get('page'),
+            $param
         );
 
         $pagerfantaFactory    = new  PagerfantaFactory ();

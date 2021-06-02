@@ -2,8 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Client;
-use App\Entity\Mobile;
 use App\Entity\Mobiles;
 use App\Exception\Errors;
 use App\Exception\ResourceValidationException;
@@ -14,16 +12,7 @@ use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Request\ParamFetcherInterface;
 use FOS\RestBundle\View\View;
-use Hateoas\Configuration\Route;
 use Hateoas\HateoasBuilder;
-use Hateoas\Representation\CollectionRepresentation;
-use Hateoas\Representation\Factory\PagerfantaFactory;
-use Hateoas\Representation\PaginatedRepresentation;
-use JMS\Serializer\SerializationContext;
-use JMS\Serializer\Serializer;
-use JMS\Serializer\SerializerInterface;
-use Nelmio\ApiDocBundle\Annotation\Security;
-use OpenApi\Annotations\Parameter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -37,15 +26,11 @@ use Nelmio\ApiDocBundle\Annotation\Model;
 class MobilesController extends AbstractFOSRestController
 {
     private $em;
-    private $repoMobiles;
     private $errors;
-    private $hateoas;
 
-    public function __construct( EntityManagerInterface $em, MobilesRepository $repoMobiles, Errors $errors){
+    public function __construct( EntityManagerInterface $em, Errors $errors){
         $this->em = $em;
-        $this->repoMobiles = $repoMobiles;
         $this->errors = $errors;
-        $this->hateoas = HateoasBuilder::create()->build();
     }
 
     /**
@@ -91,7 +76,7 @@ class MobilesController extends AbstractFOSRestController
      *     name="keyword",
      *     requirements="[a-zA-Z0-9]",
      *     nullable=true,
-     *     description="The keyword to search for."
+     *     description="The keyword to search a mobile."
      * )
      * @Rest\QueryParam(
      *     name="order",
@@ -388,7 +373,7 @@ class MobilesController extends AbstractFOSRestController
      * )
      * @OA\Tag(name="Mobiles")
      */
-    public function deleteMobilesMethod(Mobiles $mobile)
+    public function deleteMobilesMethod(Mobiles $mobile): JsonResponse
     {
         $this->em->remove($mobile);
         $this->em->flush();

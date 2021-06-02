@@ -33,6 +33,7 @@ use Symfony\Component\Validator\ConstraintViolationList;
 use OpenApi\Annotations as OA;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use Hateoas\HateoasBuilder;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
 class ClientsController extends AbstractFOSRestController
 {
@@ -127,7 +128,7 @@ class ClientsController extends AbstractFOSRestController
     }
 
     /**
-     * Show one client details and this users
+     * Show one client details
      * @Rest\Get(
      *     path = "/api/clients/{id}",
      *     name = "client_show",
@@ -147,7 +148,7 @@ class ClientsController extends AbstractFOSRestController
      *     ),
      *     @OA\Response(
      *          response="200",
-     *          description="Show a client detail with users list",
+     *          description="Show a client details",
      *          @OA\JsonContent(
      *              type="array",
      *              @OA\Items(ref=@Model(type=Client::class, groups={"FullClients"}))
@@ -165,7 +166,6 @@ class ClientsController extends AbstractFOSRestController
      */
     public function getOneClients(Client $client): View
     {
-        $client->setExclude(false);
         return $this->view(
             $client,
             Response::HTTP_OK
@@ -230,6 +230,7 @@ class ClientsController extends AbstractFOSRestController
      */
     public function postAddOneClient(Client $client, ConstraintViolationList $violations,Request $request): View
     {
+        $client->setExclude(true);
         $this->errors->violation($violations);
         $this->em->persist($client);
         $this->em->flush();

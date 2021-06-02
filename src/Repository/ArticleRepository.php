@@ -4,18 +4,25 @@ namespace App\Repository;
 
 class ArticleRepository extends AbstractRepository
 {
-    public function search($term, $order = 'asc', $limit, $page)
+    public function search($keyword, $order = 'asc', $limit, $page, $param)
     {
         $qb = $this
             ->createQueryBuilder('c')
             ->select('c')
             ->orderBy('c.id', $order)
-        ;
 
-        if ($term) {
+        ;
+        if ($keyword) {
             $qb
                 ->where('c.name LIKE ?1')
-                ->setParameter(1, '%'.$term.'%')
+                ->setParameter(1, '%'.$keyword.'%')
+            ;
+        }
+
+        if ($param) {
+            $qb
+                ->where('c.client = :param')
+                ->setParameter('param', $param)
             ;
         }
         return $this->paginate($qb, $limit, $page);

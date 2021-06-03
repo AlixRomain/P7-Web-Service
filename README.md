@@ -5,13 +5,13 @@
 
 This REST API provides a catalog of mobiles for our clients, and the possibility to manage their users.
 
-[Visit the api doc](https://bilemo.tabaz.fr/doc)
+[Visit the api doc](https://bilemo.tabaz.fr/api/doc)
 
 ## Build With
 
 - Symfony 5
 - LexikJWTAuthenticationBundle
-- JMSSerializerBundle
+- JMS-SerializerBundle
 - FOSRESTBUNDLE
 - Hateoas-bundle
 - Pagerfanta-bundle
@@ -81,4 +81,4 @@ An admin account is already available, use it to test the API :
 
 ## Documentation
 
-You can see the full documentation here => [Bilemo Api Documentation](https://bilemo.tabaz.fr/doc)
+You can see the full documentation here => [Bilemo Api Documentation](https://bilemo.tabaz.fr/api/doc)
